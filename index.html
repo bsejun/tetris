@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CURTRIS 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #100b08;
+      --panel: rgba(32, 20, 14, 0.92);
+      --line: rgba(240, 180, 90, 0.18);
+      --text: #f6eee4;
+      --muted: #b79a82;
+      --accent: #f0b429;
+      --danger: #ff6b6b;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: "Noto Sans KR", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 50% -8%, rgba(240, 180, 41, 0.16), transparent 55%),
+        radial-gradient(800px 480px at 80% 110%, rgba(255, 106, 61, 0.12), transparent 50%),
+        var(--bg);
+      display: grid;
+      place-items: center;
+      min-height: 100%;
+      overflow: hidden;
+    }
+
+    .app {
+      display: flex;
+      align-items: stretch;
+      gap: 28px;
+      padding: 24px;
+    }
+
+    .hud {
+      width: 210px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .brand h1 {
+      font-family: Syne, sans-serif;
+      font-size: 34px;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      text-shadow: 0 0 22px rgba(240, 180, 41, 0.4);
+    }
+
+    .brand p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel h2 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .score-value {
+      font-family: Syne, sans-serif;
+      font-size: 30px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stat-row strong {
+      color: var(--text);
+      font-family: Syne, sans-serif;
+      font-size: 16px;
+    }
+
+    .next-panel { transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s; }
+    .next-panel.ready {
+      border-color: rgba(240, 180, 41, 0.55);
+      box-shadow: var(--shadow), 0 0 22px rgba(240, 180, 41, 0.18);
+    }
+    .next-panel.used { opacity: 0.62; }
+
+    #next-stage {
+      width: 168px;
+      height: 120px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #0d0907;
+    }
+
+    .swap-status {
+      margin-top: 8px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+    }
+    .next-panel.used .swap-status { color: var(--muted); }
+
+    .help kbd {
+      display: inline-block;
+      min-width: 22px;
+      padding: 1px 6px;
+      margin-right: 8px;
+      border: 1px solid var(--line);
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      background: #1a110c;
+      font-size: 11px;
+      color: var(--accent);
+      text-align: center;
+    }
+
+    .help li {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.9;
+    }
+
+    .stage {
+      position: relative;
+      padding: 10px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(240, 180, 41, 0.22), rgba(255, 106, 61, 0.1));
+      box-shadow: var(--shadow), 0 0 40px rgba(240, 180, 41, 0.1);
+    }
+
+    #view {
+      display: block;
+      width: 430px;
+      height: 720px;
+      border-radius: 12px;
+      background: #0b0806;
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 38%;
+      transform: translate(-50%, -50%);
+      font-family: Syne, sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      text-shadow: 0 0 22px rgba(240, 180, 41, 0.55);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 10px;
+      display: none;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(16, 10, 7, 0.78);
+      backdrop-filter: blur(8px);
+      text-align: center;
+      padding: 24px;
+    }
+
+    .overlay.visible { display: grid; }
+
+    .overlay h2 {
+      font-family: Syne, sans-serif;
+      font-size: 34px;
+      color: var(--danger);
+    }
+
+    .overlay p {
+      margin: 12px 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .overlay button {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1108;
+      background: var(--accent);
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 28px;
+      cursor: pointer;
+      box-shadow: 0 0 24px rgba(240, 180, 41, 0.35);
+    }
+
+    @media (max-width: 860px) {
+      body { overflow: auto; }
+      .app {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      .hud { width: min(430px, 100%); }
+      #view { width: min(430px, 92vw); height: 70vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="hud">
+      <div class="brand">
+        <h1>CURTRIS</h1>
+        <p>10 × 4 × 20 입체 우물 · 블록당 교체 1회</p>
+      </div>
+      <section class="panel">
+        <h2>Score</h2>
+        <div class="score-value" id="score">0</div>
+        <div class="stat-row">최고 기록 <strong id="high-score">0</strong></div>
+        <div class="stat-row">줄 <strong id="lines">0</strong></div>
+        <div class="stat-row">레벨 <strong id="level">1</strong></div>
+        <div class="stat-row">콤보 <strong id="combo">0</strong></div>
+        <div class="stat-row">깊이 <strong id="depth-hud">2 / 4</strong></div>
+      </section>
+      <section class="panel next-panel ready" id="next-panel">
+        <h2>Next</h2>
+        <div id="next-stage"></div>
+        <div class="swap-status" id="swap-status">REWRITE READY</div>
+      </section>
+      <section class="panel help">
+        <h2>조작</h2>
+        <ul>
+          <li><kbd>←</kbd><kbd>→</kbd> 좌우 이동</li>
+          <li><kbd>W</kbd><kbd>S</kbd> 앞뒤 이동</li>
+          <li><kbd>↑</kbd> 회전</li>
+          <li><kbd>↓</kbd> 소프트 드롭</li>
+          <li><kbd>Space</kbd> 하드 드롭</li>
+          <li><kbd>C</kbd> 다음 블록 1회 교체</li>
+          <li><kbd>Q</kbd><kbd>E</kbd> 3D 시점</li>
+          <li><kbd>P</kbd> 일시정지</li>
+        </ul>
+      </section>
+    </aside>
+
+    <main class="stage" id="stage">
+      <canvas id="view" width="430" height="720"></canvas>
+      <div class="toast" id="toast"></div>
+      <div class="overlay" id="overlay">
+        <div>
+          <h2 id="overlay-title">Game Over</h2>
+          <p id="overlay-message">최종 점수 0</p>
+          <button type="button" id="restart">다시 시작 (Restart)</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const COLS = 10;
+      const ROWS = 20;
+      const DEPTH = 4;
+      const HIGH_SCORE_KEY = "curtris-high-score";
+      const LINE_SCORES = [0, 100, 300, 500, 800];
+      const REWRITE_MS = 420;
+
+      const SHAPES = {
+        I: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
+        J: [[1, 0, 0], [1, 1, 1], [0, 0, 0]],
+        L: [[0, 0, 1], [1, 1, 1], [0, 0, 0]],
+        O: [[1, 1], [1, 1]],
+        S: [[0, 1, 1], [1, 1, 0], [0, 0, 0]],
+        T: [[0, 1, 0], [1, 1, 1], [0, 0, 0]],
+        Z: [[1, 1, 0], [0, 1, 1], [0, 0, 0]]
+      };
+
+      const COLORS = {
+        I: "#f0b429",
+        J: "#4ea1ff",
+        L: "#ff8a3d",
+        O: "#ffe066",
+        S: "#3dd68c",
+        T: "#d47bff",
+        Z: "#ff5d6c"
+      };
+
+      const overlay = document.getElementById("overlay");
+      const overlayTitle = document.getElementById("overlay-title");
+      const overlayMessage = document.getElementById("overlay-message");
+      const restartBtn = document.getElementById("restart");
+      const scoreEl = document.getElementById("score");
+      const highScoreEl = document.getElementById("high-score");
+      const linesEl = document.getElementById("lines");
+      const levelEl = document.getElementById("level");
+      const comboEl = document.getElementById("combo");
+      const depthHud = document.getElementById("depth-hud");
+      const nextPanel = document.getElementById("next-panel");
+      const swapStatus = document.getElementById("swap-status");
+      const toastEl = document.getElementById("toast");
+      const viewCanvas = document.getElementById("view");
+      const nextStage = document.getElementById("next-stage");
+
+      const state = {
+        board: [],
+        current: null,
+        nextType: null,
+        bag: [],
+        score: 0,
+        highScore: Number(localStorage.getItem(HIGH_SCORE_KEY) || 0),
+        lines: 0,
+        level: 1,
+        combo: 0,
+        dropMs: 800,
+        dropAcc: 0,
+        lastTs: 0,
+        softDrop: false,
+        paused: false,
+        gameOver: false,
+        clearing: null,
+        canSwap: true,
+        rewritten: false,
+        rewriteUntil: 0,
+        floater: null,
+        camKick: 0,
+        yaw: 0.55,
+        pitch: 0.26
+      };
+
+      if (typeof THREE === "undefined") {
+        overlay.classList.add("visible");
+        overlayTitle.textContent = "3D 엔진 로드 실패";
+        overlayMessage.textContent = "인터넷 연결 후 새로고침 해주세요.";
+        return;
+      }
+
+      const cubeGeo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+      const edgeGeo = new THREE.EdgesGeometry(cubeGeo);
+      const edgeMat = new THREE.LineBasicMaterial({
+        color: 0x140c08,
+        transparent: true,
+        opacity: 0.35
+      });
+
+      function cellPos(col, row, layer) {
+        return new THREE.Vector3(
+          col + 0.5 - COLS / 2,
+          ROWS / 2 - row - 0.5,
+          layer + 0.5 - DEPTH / 2
+        );
+      }
+
+      function makeCube() {
+        const mat = new THREE.MeshStandardMaterial({
+          color: "#888888",
+          roughness: 0.34,
+          metalness: 0.28,
+          emissive: "#000000",
+          emissiveIntensity: 0.08
+        });
+        const mesh = new THREE.Mesh(cubeGeo, mat);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.add(new THREE.LineSegments(edgeGeo, edgeMat));
+        mesh.visible = false;
+        return mesh;
+      }
+
+      function paintCube(mesh, color, glow, alpha) {
+        mesh.visible = true;
+        mesh.material.color.set(color);
+        mesh.material.transparent = alpha < 1;
+        mesh.material.opacity = alpha;
+        mesh.material.emissive.set(glow ? "#f0b429" : color);
+        mesh.material.emissiveIntensity = glow ? 0.55 : 0.08;
+        mesh.material.depthWrite = alpha > 0.5;
+      }
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0b0806);
+      scene.fog = new THREE.Fog(0x0b0806, 36, 72);
+
+      const viewRect = viewCanvas.getBoundingClientRect();
+      const renderer = new THREE.WebGLRenderer({
+        canvas: viewCanvas,
+        antialias: true
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(viewRect.width, viewRect.height, false);
+      renderer.shadowMap.enabled = true;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+
+      const camera = new THREE.PerspectiveCamera(34, viewRect.width / viewRect.height, 0.1, 120);
+
+      scene.add(new THREE.AmbientLight(0xffe6c8, 0.42));
+      const key = new THREE.DirectionalLight(0xfff3d6, 1.25);
+      key.position.set(10, 18, 16);
+      key.castShadow = true;
+      key.shadow.mapSize.set(1024, 1024);
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(0x4ea1ff, 0.28);
+      fill.position.set(-12, 6, 10);
+      scene.add(fill);
+      const wellLight = new THREE.PointLight(0xf0b429, 1.4, 36);
+      wellLight.position.set(0, -8, 5);
+      scene.add(wellLight);
+
+      const well = new THREE.Group();
+      scene.add(well);
+
+      const wallMat = new THREE.MeshStandardMaterial({
+        color: 0x1b110c,
+        roughness: 0.92,
+        metalness: 0.08,
+        side: THREE.DoubleSide
+      });
+      const depth = DEPTH;
+      const back = new THREE.Mesh(new THREE.PlaneGeometry(COLS, ROWS), wallMat);
+      back.position.z = -depth / 2;
+      back.receiveShadow = true;
+      well.add(back);
+      const left = new THREE.Mesh(new THREE.PlaneGeometry(depth, ROWS), wallMat);
+      left.rotation.y = Math.PI / 2;
+      left.position.set(-COLS / 2, 0, 0);
+      well.add(left);
+      const right = left.clone();
+      right.position.x = COLS / 2;
+      well.add(right);
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(COLS, depth), wallMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -ROWS / 2;
+      floor.receiveShadow = true;
+      well.add(floor);
+
+      const gridPts = [];
+      const backZ = -depth / 2 + 0.02;
+      const floorY = -ROWS / 2 + 0.02;
+      for (let x = 0; x <= COLS; x += 1) {
+        gridPts.push(x - COLS / 2, -ROWS / 2, backZ, x - COLS / 2, ROWS / 2, backZ);
+      }
+      for (let y = 0; y <= ROWS; y += 1) {
+        gridPts.push(-COLS / 2, y - ROWS / 2, backZ, COLS / 2, y - ROWS / 2, backZ);
+      }
+      for (let x = 0; x <= COLS; x += 1) {
+        gridPts.push(x - COLS / 2, floorY, -depth / 2, x - COLS / 2, floorY, depth / 2);
+      }
+      for (let z = 0; z <= DEPTH; z += 1) {
+        gridPts.push(-COLS / 2, floorY, z - depth / 2, COLS / 2, floorY, z - depth / 2);
+      }
+      const gridGeo = new THREE.BufferGeometry();
+      gridGeo.setAttribute("position", new THREE.Float32BufferAttribute(gridPts, 3));
+      const grid = new THREE.LineSegments(
+        gridGeo,
+        new THREE.LineBasicMaterial({ color: 0xf0b429, transparent: true, opacity: 0.16 })
+      );
+      grid.position.z = 0;
+      well.add(grid);
+
+      const rimGeo = new THREE.BufferGeometry();
+      const hw = COLS / 2;
+      const hh = ROWS / 2;
+      const hd = depth / 2;
+      rimGeo.setAttribute("position", new THREE.Float32BufferAttribute([
+        -hw, -hh, hd, hw, -hh, hd,
+        hw, -hh, hd, hw, hh, hd,
+        hw, hh, hd, -hw, hh, hd,
+        -hw, hh, hd, -hw, -hh, hd
+      ], 3));
+      well.add(new THREE.LineSegments(
+        rimGeo,
+        new THREE.LineBasicMaterial({ color: 0xf0b429, transparent: true, opacity: 0.45 })
+      ));
+
+      const locked = Array.from({ length: COLS * ROWS * DEPTH }, makeCube);
+      locked.forEach((cube) => well.add(cube));
+      const active = Array.from({ length: 4 }, makeCube);
+      active.forEach((cube) => well.add(cube));
+      const ghosts = Array.from({ length: 4 }, makeCube);
+      ghosts.forEach((cube) => well.add(cube));
+
+      const nextScene = new THREE.Scene();
+      nextScene.background = new THREE.Color(0x0d0907);
+      const nextCamera = new THREE.PerspectiveCamera(40, 168 / 120, 0.1, 50);
+      nextCamera.position.set(2.4, 2.2, 6.2);
+      nextCamera.lookAt(0, 0, 0);
+      nextScene.add(new THREE.AmbientLight(0xffffff, 0.7));
+      const nextKey = new THREE.DirectionalLight(0xfff0d0, 1.1);
+      nextKey.position.set(3, 5, 6);
+      nextScene.add(nextKey);
+      const nextGroup = new THREE.Group();
+      nextScene.add(nextGroup);
+      const nextCubes = Array.from({ length: 4 }, makeCube);
+      nextCubes.forEach((cube) => nextGroup.add(cube));
+      const nextRenderer = new THREE.WebGLRenderer({ antialias: true });
+      nextRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      nextRenderer.setSize(168, 120, false);
+      nextStage.appendChild(nextRenderer.domElement);
+
+      function cloneShape(type) {
+        return SHAPES[type].map((row) => row.slice());
+      }
+
+      function createBoard() {
+        return Array.from({ length: DEPTH }, () =>
+          Array.from({ length: ROWS }, () => Array(COLS).fill(null))
+        );
+      }
+
+      function shuffleBag() {
+        const types = Object.keys(SHAPES);
+        for (let i = types.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [types[i], types[j]] = [types[j], types[i]];
+        }
+        return types;
+      }
+
+      function takeType() {
+        if (state.bag.length === 0) state.bag = shuffleBag();
+        return state.bag.pop();
+      }
+
+      function spawnPiece(type) {
+        const shape = cloneShape(type);
+        return {
+          type,
+          shape,
+          x: Math.floor((COLS - shape[0].length) / 2),
+          y: 0,
+          z: Math.floor((DEPTH - 1) / 2)
+        };
+      }
+
+      function rotateClockwise(shape) {
+        const size = shape.length;
+        const rotated = Array.from({ length: size }, () => Array(size).fill(0));
+        for (let y = 0; y < size; y += 1) {
+          for (let x = 0; x < size; x += 1) {
+            rotated[x][size - 1 - y] = shape[y][x];
+          }
+        }
+        return rotated;
+      }
+
+      function collides(shape, offsetX, offsetY, offsetZ) {
+        if (offsetZ < 0 || offsetZ >= DEPTH) return true;
+        for (let y = 0; y < shape.length; y += 1) {
+          for (let x = 0; x < shape[y].length; x += 1) {
+            if (!shape[y][x]) continue;
+            const nx = offsetX + x;
+            const ny = offsetY + y;
+            if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
+            if (ny >= 0 && state.board[offsetZ][ny][nx]) return true;
+          }
+        }
+        return false;
+      }
+
+      function ghostY(piece) {
+        let y = piece.y;
+        while (!collides(piece.shape, piece.x, y + 1, piece.z)) y += 1;
+        return y;
+      }
+
+      function showToast(text) {
+        state.floater = { text, born: performance.now(), life: 900 };
+        toastEl.textContent = text;
+      }
+
+      function setSwapReady(ready) {
+        state.canSwap = ready;
+        nextPanel.classList.toggle("ready", ready);
+        nextPanel.classList.toggle("used", !ready);
+        swapStatus.textContent = ready ? "REWRITE READY" : "USED · 다음 블록까지";
+      }
+
+      function mergePiece() {
+        const { shape, x, y, z, type } = state.current;
+        for (let row = 0; row < shape.length; row += 1) {
+          for (let col = 0; col < shape[row].length; col += 1) {
+            if (!shape[row][col]) continue;
+            const by = y + row;
+            const bx = x + col;
+            if (by < 0) {
+              endGame();
+              return false;
+            }
+            state.board[z][by][bx] = type;
+          }
+        }
+        return true;
+      }
+
+      function fullRows() {
+        const rows = [];
+        for (let z = 0; z < DEPTH; z += 1) {
+          for (let y = 0; y < ROWS; y += 1) {
+            if (state.board[z][y].every(Boolean)) rows.push({ z, y });
+          }
+        }
+        return rows;
+      }
+
+      function removeRows(rows) {
+        if (rows.length === 0) return;
+        const byZ = Array.from({ length: DEPTH }, () => []);
+        rows.forEach(({ z, y }) => byZ[z].push(y));
+        byZ.forEach((ys, z) => {
+          if (ys.length === 0) return;
+          state.board[z] = state.board[z].filter((_, y) => !ys.includes(y));
+          while (state.board[z].length < ROWS) {
+            state.board[z].unshift(Array(COLS).fill(null));
+          }
+        });
+
+        const cleared = rows.length;
+        state.lines += cleared;
+        state.combo += 1;
+
+        const capped = Math.min(cleared, 4);
+        let gained = (LINE_SCORES[capped] + Math.max(0, cleared - 4) * 800) * state.level;
+        gained += Math.max(0, state.combo - 1) * 50 * state.level;
+        if (state.rewritten) {
+          gained *= 2;
+          showToast("CUR CLEAR x2");
+        } else if (state.combo > 1) {
+          showToast(`COMBO x${state.combo}`);
+        }
+
+        state.score += gained;
+        state.level = Math.floor(state.lines / 10) + 1;
+        state.dropMs = Math.max(120, 800 - (state.level - 1) * 70);
+        updateHud();
+      }
+
+      function spawnNext() {
+        state.current = spawnPiece(state.nextType);
+        state.nextType = takeType();
+        state.rewritten = false;
+        state.rewriteUntil = 0;
+        setSwapReady(true);
+        syncNext();
+        if (collides(state.current.shape, state.current.x, state.current.y, state.current.z)) {
+          endGame();
+        }
+      }
+
+      function lockCurrent() {
+        if (!mergePiece() || state.gameOver) return;
+        const rows = fullRows();
+        if (rows.length === 0) state.combo = 0;
+        updateHud();
+        if (rows.length > 0) {
+          state.clearing = { rows, until: performance.now() + 220 };
+        } else {
+          spawnNext();
+        }
+      }
+
+      function tryMove(dx, dy, dz = 0) {
+        const piece = state.current;
+        if (!piece || state.gameOver || state.paused || state.clearing) return false;
+        const nextZ = piece.z + dz;
+        if (collides(piece.shape, piece.x + dx, piece.y + dy, nextZ)) return false;
+        piece.x += dx;
+        piece.y += dy;
+        piece.z = nextZ;
+        updateHud();
+        return true;
+      }
+
+      function tryRotate() {
+        const piece = state.current;
+        if (!piece || piece.type === "O" || state.gameOver || state.paused || state.clearing) return;
+        const rotated = rotateClockwise(piece.shape);
+        const kicks = [0, -1, 1, -2, 2];
+        for (const kick of kicks) {
+          if (!collides(rotated, piece.x + kick, piece.y, piece.z)) {
+            piece.shape = rotated;
+            piece.x += kick;
+            return;
+          }
+        }
+        for (const kick of kicks) {
+          if (!collides(rotated, piece.x + kick, piece.y - 1, piece.z)) {
+            piece.shape = rotated;
+            piece.x += kick;
+            piece.y -= 1;
+            return;
+          }
+        }
+      }
+
+      function softDrop() {
+        if (tryMove(0, 1)) {
+          state.score += 1;
+          updateHud();
+          return true;
+        }
+        lockCurrent();
+        return false;
+      }
+
+      function hardDrop() {
+        const piece = state.current;
+        if (!piece || state.gameOver || state.paused || state.clearing) return;
+        const dist = ghostY(piece) - piece.y;
+        piece.y += dist;
+        state.score += dist * 2;
+        state.camKick = 0.9;
+        updateHud();
+        lockCurrent();
+      }
+
+      function gravityDrop() {
+        if (!tryMove(0, 1)) lockCurrent();
+      }
+
+      function swapWithNext() {
+        const piece = state.current;
+        if (!piece || !state.canSwap || state.gameOver || state.paused || state.clearing) return;
+
+        const nextShape = cloneShape(state.nextType);
+        const x = piece.x + Math.floor((piece.shape[0].length - nextShape[0].length) / 2);
+        const y = piece.y;
+        const z = piece.z;
+        const kicks = [0, -1, 1, -2, 2];
+        let placed = null;
+
+        for (const dy of [0, -1, 1]) {
+          for (const kick of kicks) {
+            if (!collides(nextShape, x + kick, y + dy, z)) {
+              placed = { x: x + kick, y: y + dy, z };
+              break;
+            }
+          }
+          if (placed) break;
+        }
+
+        if (!placed) {
+          for (const dz of [-1, 1]) {
+            if (!collides(nextShape, x, y, z + dz)) {
+              placed = { x, y, z: z + dz };
+              break;
+            }
+          }
+        }
+
+        if (!placed) {
+          const spawned = spawnPiece(state.nextType);
+          if (collides(spawned.shape, spawned.x, spawned.y, spawned.z)) return;
+          placed = { x: spawned.x, y: spawned.y, z: spawned.z };
+        }
+
+        const previousType = piece.type;
+        state.current = {
+          type: state.nextType,
+          shape: nextShape,
+          x: placed.x,
+          y: placed.y,
+          z: placed.z
+        };
+        state.nextType = previousType;
+        state.rewritten = true;
+        state.rewriteUntil = performance.now() + REWRITE_MS;
+        state.dropAcc = 0;
+        setSwapReady(false);
+        showToast("REWRITE");
+        syncNext();
+      }
+
+      function updateHud() {
+        if (state.score > state.highScore) {
+          state.highScore = state.score;
+          localStorage.setItem(HIGH_SCORE_KEY, String(state.highScore));
+        }
+        scoreEl.textContent = state.score.toLocaleString();
+        highScoreEl.textContent = state.highScore.toLocaleString();
+        linesEl.textContent = String(state.lines);
+        levelEl.textContent = String(state.level);
+        comboEl.textContent = String(state.combo);
+        const layer = state.current ? state.current.z + 1 : Math.floor((DEPTH - 1) / 2) + 1;
+        depthHud.textContent = `${layer} / ${DEPTH}`;
+      }
+
+      function endGame() {
+        state.gameOver = true;
+        state.paused = false;
+        overlayTitle.textContent = "Game Over";
+        overlayMessage.textContent = `최종 점수 ${state.score.toLocaleString()}`;
+        restartBtn.textContent = "다시 시작 (Restart)";
+        overlay.classList.add("visible");
+      }
+
+      function showPaused(show) {
+        if (state.gameOver) return;
+        overlayTitle.textContent = "PAUSED";
+        overlayMessage.textContent = "P 키 또는 버튼을 눌러 계속하세요";
+        overlay.classList.toggle("visible", show);
+        restartBtn.textContent = show ? "계속하기" : "다시 시작 (Restart)";
+      }
+
+      function resetGame() {
+        state.board = createBoard();
+        state.bag = shuffleBag();
+        state.nextType = takeType();
+        state.score = 0;
+        state.lines = 0;
+        state.level = 1;
+        state.combo = 0;
+        state.dropMs = 800;
+        state.dropAcc = 0;
+        state.lastTs = 0;
+        state.softDrop = false;
+        state.paused = false;
+        state.gameOver = false;
+        state.clearing = null;
+        state.rewritten = false;
+        state.rewriteUntil = 0;
+        state.floater = null;
+        state.camKick = 0;
+        overlay.classList.remove("visible");
+        restartBtn.textContent = "다시 시작 (Restart)";
+        spawnNext();
+        updateHud();
+      }
+
+      function placeShape(cubes, shape, originX, originY, originZ, color, glow, alpha) {
+        let used = 0;
+        cubes.forEach((cube) => { cube.visible = false; });
+        if (!shape) return;
+        for (let y = 0; y < shape.length; y += 1) {
+          for (let x = 0; x < shape[y].length; x += 1) {
+            if (!shape[y][x] || originY + y < 0) continue;
+            const mesh = cubes[used];
+            mesh.position.copy(cellPos(originX + x, originY + y, originZ));
+            paintCube(mesh, color, glow, alpha);
+            used += 1;
+          }
+        }
+      }
+
+      function syncBoard() {
+        let i = 0;
+        for (let z = 0; z < DEPTH; z += 1) {
+          for (let y = 0; y < ROWS; y += 1) {
+            for (let x = 0; x < COLS; x += 1) {
+              const mesh = locked[i];
+              i += 1;
+              const type = state.board[z][y][x];
+              if (!type) {
+                mesh.visible = false;
+                continue;
+              }
+              mesh.position.copy(cellPos(x, y, z));
+              const flashing = state.clearing && state.clearing.rows.some((row) => row.z === z && row.y === y);
+              paintCube(mesh, flashing ? "#fff4d6" : COLORS[type], flashing, 1);
+              mesh.scale.setScalar(flashing ? 1.08 : 1);
+            }
+          }
+        }
+
+        active.forEach((cube) => { cube.visible = false; });
+        ghosts.forEach((cube) => { cube.visible = false; });
+        const piece = state.current;
+        if (!piece || state.gameOver) return;
+
+        const gy = ghostY(piece);
+        placeShape(ghosts, piece.shape, piece.x, gy, piece.z, COLORS[piece.type], false, 0.22);
+        placeShape(active, piece.shape, piece.x, piece.y, piece.z, COLORS[piece.type], state.rewritten, 1);
+      }
+
+      function syncNext() {
+        nextCubes.forEach((cube) => { cube.visible = false; });
+        if (!state.nextType) return;
+        const shape = SHAPES[state.nextType];
+        const color = COLORS[state.nextType];
+        let used = 0;
+        let minX = 99;
+        let maxX = -99;
+        let minY = 99;
+        let maxY = -99;
+        for (let y = 0; y < shape.length; y += 1) {
+          for (let x = 0; x < shape[y].length; x += 1) {
+            if (!shape[y][x]) continue;
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+          }
+        }
+        const cx = (minX + maxX) / 2;
+        const cy = (minY + maxY) / 2;
+        for (let y = 0; y < shape.length; y += 1) {
+          for (let x = 0; x < shape[y].length; x += 1) {
+            if (!shape[y][x]) continue;
+            const mesh = nextCubes[used];
+            used += 1;
+            mesh.position.set(x - cx, -(y - cy), 0);
+            paintCube(mesh, color, state.canSwap, state.canSwap ? 1 : 0.55);
+          }
+        }
+      }
+
+      function updateCamera() {
+        const dist = 36 - state.camKick * 2.2;
+        const yaw = state.yaw;
+        const pitch = state.pitch;
+        camera.position.set(
+          Math.sin(yaw) * Math.cos(pitch) * dist,
+          Math.sin(pitch) * dist + 1.2,
+          Math.cos(yaw) * Math.cos(pitch) * dist
+        );
+        camera.lookAt(0, -0.6, 0);
+      }
+
+      function syncToast(ts) {
+        if (!state.floater) {
+          toastEl.style.opacity = "0";
+          return;
+        }
+        const t = (ts - state.floater.born) / state.floater.life;
+        if (t >= 1) {
+          state.floater = null;
+          toastEl.style.opacity = "0";
+          return;
+        }
+        toastEl.style.opacity = String(1 - t);
+        toastEl.style.transform = `translate(-50%, calc(-50% - ${t * 36}px))`;
+      }
+
+      function tick(ts) {
+        if (!state.lastTs) state.lastTs = ts;
+        const delta = Math.min(48, ts - state.lastTs);
+        state.lastTs = ts;
+
+        if (state.clearing && ts >= state.clearing.until) {
+          removeRows(state.clearing.rows);
+          state.clearing = null;
+          if (!state.gameOver) spawnNext();
+        }
+
+        const rewriting = ts < state.rewriteUntil;
+        if (!state.paused && !state.gameOver && !state.clearing && !rewriting) {
+          state.dropAcc += delta;
+          const interval = state.softDrop ? 42 : state.dropMs;
+          while (state.dropAcc >= interval) {
+            state.dropAcc -= interval;
+            const pieceBefore = state.current;
+            if (state.softDrop) softDrop();
+            else gravityDrop();
+            if (state.clearing || state.gameOver || state.current !== pieceBefore) {
+              state.dropAcc = 0;
+              break;
+            }
+          }
+        }
+
+        state.camKick *= 0.86;
+        nextGroup.rotation.y = ts * 0.0016;
+        wellLight.intensity = state.rewritten ? 2.1 : 1.3;
+        updateCamera();
+        syncBoard();
+        syncToast(ts);
+        renderer.render(scene, camera);
+        nextRenderer.render(nextScene, nextCamera);
+        requestAnimationFrame(tick);
+      }
+
+      function onKeyDown(event) {
+        const key = event.key;
+        if (["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " "].includes(key)) {
+          event.preventDefault();
+        }
+        if (key === "w" || key === "W" || key === "s" || key === "S") {
+          event.preventDefault();
+        }
+
+        if (state.gameOver) {
+          if (key === "Enter" || key === "r" || key === "R") resetGame();
+          return;
+        }
+
+        if (key === "p" || key === "P") {
+          state.paused = !state.paused;
+          showPaused(state.paused);
+          if (!state.paused) {
+            overlay.classList.remove("visible");
+            restartBtn.textContent = "다시 시작 (Restart)";
+            state.lastTs = 0;
+          }
+          return;
+        }
+
+        if (key === "q" || key === "Q") {
+          state.yaw = Math.max(-1.2, state.yaw - 0.08);
+          return;
+        }
+        if (key === "e" || key === "E") {
+          state.yaw = Math.min(1.2, state.yaw + 0.08);
+          return;
+        }
+
+        if (state.paused) return;
+        if (event.repeat && (key === "c" || key === "C" || key === "Shift")) return;
+
+        switch (key) {
+          case "ArrowLeft":
+            tryMove(-1, 0, 0);
+            break;
+          case "ArrowRight":
+            tryMove(1, 0, 0);
+            break;
+          case "w":
+          case "W":
+            tryMove(0, 0, 1);
+            break;
+          case "s":
+          case "S":
+            tryMove(0, 0, -1);
+            break;
+          case "ArrowDown":
+            state.softDrop = true;
+            state.dropAcc = 0;
+            if (performance.now() >= state.rewriteUntil) softDrop();
+            break;
+          case "ArrowUp":
+            tryRotate();
+            break;
+          case " ":
+            hardDrop();
+            break;
+          case "c":
+          case "C":
+          case "Shift":
+            swapWithNext();
+            break;
+          default:
+            break;
+        }
+      }
+
+      function onKeyUp(event) {
+        if (event.key === "ArrowDown") state.softDrop = false;
+      }
+
+      let dragging = false;
+      let lastX = 0;
+      let lastY = 0;
+      viewCanvas.addEventListener("pointerdown", (event) => {
+        dragging = true;
+        lastX = event.clientX;
+        lastY = event.clientY;
+        viewCanvas.setPointerCapture(event.pointerId);
+      });
+      viewCanvas.addEventListener("pointermove", (event) => {
+        if (!dragging) return;
+        state.yaw = Math.max(-1.2, Math.min(1.2, state.yaw + (event.clientX - lastX) * 0.006));
+        state.pitch = Math.max(0.06, Math.min(0.72, state.pitch + (event.clientY - lastY) * 0.004));
+        lastX = event.clientX;
+        lastY = event.clientY;
+      });
+      viewCanvas.addEventListener("pointerup", () => { dragging = false; });
+      viewCanvas.addEventListener("pointerleave", () => { dragging = false; });
+
+      restartBtn.addEventListener("click", () => {
+        if (state.paused && !state.gameOver) {
+          state.paused = false;
+          overlay.classList.remove("visible");
+          restartBtn.textContent = "다시 시작 (Restart)";
+          state.lastTs = 0;
+          return;
+        }
+        resetGame();
+      });
+
+      window.addEventListener("resize", () => {
+        const rect = viewCanvas.getBoundingClientRect();
+        camera.aspect = rect.width / rect.height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(rect.width, rect.height, false);
+      });
+
+      document.addEventListener("keydown", onKeyDown);
+      document.addEventListener("keyup", onKeyUp);
+      document.addEventListener("visibilitychange", () => {
+        state.lastTs = 0;
+        if (document.hidden) state.softDrop = false;
+      });
+
+      highScoreEl.textContent = state.highScore.toLocaleString();
+      resetGame();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>
