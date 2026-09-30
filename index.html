@@ -107,13 +107,39 @@
     }
     .next-panel.used { opacity: 0.62; }
 
-    #next-stage {
+    .next-frame {
+      position: relative;
       width: 168px;
-      height: 120px;
+      height: 176px;
+    }
+
+    #next-stage {
+      width: 100%;
+      height: 100%;
       border-radius: 10px;
       overflow: hidden;
       background: #0d0907;
     }
+
+    #next-stage canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .q-label {
+      position: absolute;
+      bottom: 6px;
+      z-index: 1;
+      font-family: Syne, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .q3 { left: 30px; }
+    .q4 { right: 30px; }
 
     .swap-status {
       margin-top: 8px;
@@ -217,6 +243,152 @@
       box-shadow: 0 0 24px rgba(240, 180, 41, 0.35);
     }
 
+    .overlay-card { position: relative; z-index: 4; }
+
+    .go-hint { display: none; }
+
+    .go-flash,
+    .go-veil,
+    .go-fx { display: none; }
+
+    .overlay.game-over {
+      background: transparent;
+      backdrop-filter: none;
+    }
+
+    .overlay.game-over .go-flash,
+    .overlay.game-over .go-veil,
+    .overlay.game-over .go-fx {
+      display: block;
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .overlay.game-over .go-flash {
+      z-index: 1;
+      background: #fff1e4;
+      opacity: 0;
+      animation: goFlash 0.35s ease-out forwards;
+    }
+
+    .overlay.game-over .go-veil {
+      z-index: 2;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255, 72, 36, 0.28), rgba(10, 5, 3, 0.88) 62%);
+      opacity: 0;
+      animation: goVeil 0.65s 0.82s ease forwards;
+    }
+
+    .overlay.game-over .go-veil::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0 2px,
+        rgba(0, 0, 0, 0.22) 2px 3px
+      );
+      opacity: 0.45;
+      animation: goScan 7s linear infinite;
+    }
+
+    .overlay.game-over .go-fx { z-index: 3; }
+
+    .shock {
+      position: absolute;
+      left: 50%;
+      top: 40%;
+      width: 48px;
+      height: 48px;
+      margin: -24px 0 0 -24px;
+      border: 2px solid rgba(255, 120, 60, 0.85);
+      border-radius: 50%;
+      box-shadow: 0 0 18px rgba(255, 70, 30, 0.45);
+      animation: goShock 1.15s ease-out infinite;
+    }
+
+    .shock.delay { animation-delay: 0.42s; }
+
+    .ember {
+      position: absolute;
+      left: var(--x);
+      bottom: 16%;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #ffc27a;
+      box-shadow: 0 0 10px #ff5a32;
+      opacity: 0;
+      animation: goRise var(--t) var(--d) ease-in infinite;
+    }
+
+    .overlay.game-over h2 {
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 18px rgba(255, 70, 40, 0.85), 0 0 42px rgba(255, 40, 20, 0.45);
+      animation: goSlam 0.62s 0.9s cubic-bezier(0.16, 1.25, 0.3, 1) both;
+    }
+
+    .overlay.game-over .overlay-card p,
+    .overlay.game-over .overlay-card button {
+      animation: goFade 0.4s 1.15s both;
+    }
+
+    .overlay.game-over .go-hint {
+      display: block;
+      margin: -6px 0 18px;
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    .stage.game-over {
+      animation: stagePulse 1.15s ease;
+    }
+
+    @keyframes goFlash {
+      0% { opacity: 0.9; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes goVeil {
+      to { opacity: 1; }
+    }
+
+    @keyframes goScan {
+      from { transform: translateY(0); }
+      to { transform: translateY(3px); }
+    }
+
+    @keyframes goShock {
+      0% { transform: scale(0.15); opacity: 0.95; }
+      100% { transform: scale(16); opacity: 0; }
+    }
+
+    @keyframes goRise {
+      0% { transform: translateY(0) scale(1); opacity: 0; }
+      18% { opacity: 1; }
+      100% { transform: translateY(-260px) scale(0.25); opacity: 0; }
+    }
+
+    @keyframes goSlam {
+      0% { transform: scale(1.85); filter: blur(8px); opacity: 0; }
+      100% { transform: scale(1); filter: blur(0); opacity: 1; }
+    }
+
+    @keyframes goFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes stagePulse {
+      0% { box-shadow: var(--shadow), 0 0 0 rgba(255, 70, 40, 0); }
+      28% { box-shadow: var(--shadow), 0 0 54px rgba(255, 64, 28, 0.7); }
+      100% { box-shadow: var(--shadow), 0 0 40px rgba(240, 180, 41, 0.1); }
+    }
+
     @media (max-width: 860px) {
       body { overflow: auto; }
       .app {
@@ -234,7 +406,7 @@
     <aside class="hud">
       <div class="brand">
         <h1>CURTRIS</h1>
-        <p>10 × 4 × 20 입체 우물 · 블록당 교체 1회</p>
+        <p>10 × 3 × 20 입체 우물 · 3층 SLICE · 교체 1회</p>
       </div>
       <section class="panel">
         <h2>Score</h2>
@@ -243,11 +415,15 @@
         <div class="stat-row">줄 <strong id="lines">0</strong></div>
         <div class="stat-row">레벨 <strong id="level">1</strong></div>
         <div class="stat-row">콤보 <strong id="combo">0</strong></div>
-        <div class="stat-row">깊이 <strong id="depth-hud">2 / 4</strong></div>
+        <div class="stat-row">깊이 <strong id="depth-hud">2 / 3</strong></div>
       </section>
       <section class="panel next-panel ready" id="next-panel">
         <h2>Next</h2>
-        <div id="next-stage"></div>
+        <div class="next-frame">
+          <div id="next-stage"></div>
+          <span class="q-label q3">3</span>
+          <span class="q-label q4">4</span>
+        </div>
         <div class="swap-status" id="swap-status">REWRITE READY</div>
       </section>
       <section class="panel help">
@@ -255,12 +431,14 @@
         <ul>
           <li><kbd>←</kbd><kbd>→</kbd> 좌우 이동</li>
           <li><kbd>W</kbd><kbd>S</kbd> 앞뒤 이동</li>
-          <li><kbd>↑</kbd> 회전</li>
+          <li><kbd>↑</kbd> 시계 회전</li>
+          <li><kbd>Z</kbd> 반대 회전</li>
           <li><kbd>↓</kbd> 소프트 드롭</li>
           <li><kbd>Space</kbd> 하드 드롭</li>
           <li><kbd>C</kbd> 다음 블록 1회 교체</li>
           <li><kbd>Q</kbd><kbd>E</kbd> 3D 시점</li>
           <li><kbd>P</kbd> 일시정지</li>
+          <li><kbd>R</kbd> 다시 시작</li>
         </ul>
       </section>
     </aside>
@@ -269,9 +447,24 @@
       <canvas id="view" width="430" height="720"></canvas>
       <div class="toast" id="toast"></div>
       <div class="overlay" id="overlay">
-        <div>
+        <div class="go-flash" aria-hidden="true"></div>
+        <div class="go-veil" aria-hidden="true"></div>
+        <div class="go-fx" aria-hidden="true">
+          <span class="shock"></span>
+          <span class="shock delay"></span>
+          <span class="ember" style="--x:8%; --d:0.05s; --t:1.7s"></span>
+          <span class="ember" style="--x:18%; --d:0.4s; --t:2.1s"></span>
+          <span class="ember" style="--x:31%; --d:0.15s; --t:1.5s"></span>
+          <span class="ember" style="--x:44%; --d:0.7s; --t:1.9s"></span>
+          <span class="ember" style="--x:57%; --d:0.25s; --t:2.3s"></span>
+          <span class="ember" style="--x:69%; --d:0.55s; --t:1.6s"></span>
+          <span class="ember" style="--x:81%; --d:0.1s; --t:2s"></span>
+          <span class="ember" style="--x:92%; --d:0.85s; --t:1.8s"></span>
+        </div>
+        <div class="overlay-card">
           <h2 id="overlay-title">Game Over</h2>
           <p id="overlay-message">최종 점수 0</p>
+          <p class="go-hint">R 또는 Enter로 다시 시작</p>
           <button type="button" id="restart">다시 시작 (Restart)</button>
         </div>
       </div>
@@ -285,9 +478,10 @@
 
       const COLS = 10;
       const ROWS = 20;
-      const DEPTH = 4;
+      const DEPTH = 3;
       const HIGH_SCORE_KEY = "curtris-high-score";
       const LINE_SCORES = [0, 100, 300, 500, 800];
+      const SLICE_BONUS = 1200;
       const REWRITE_MS = 420;
 
       const SHAPES = {
@@ -323,13 +517,14 @@
       const nextPanel = document.getElementById("next-panel");
       const swapStatus = document.getElementById("swap-status");
       const toastEl = document.getElementById("toast");
+      const stageEl = document.getElementById("stage");
       const viewCanvas = document.getElementById("view");
       const nextStage = document.getElementById("next-stage");
 
       const state = {
         board: [],
         current: null,
-        nextType: null,
+        nextQueue: [],
         bag: [],
         score: 0,
         highScore: Number(localStorage.getItem(HIGH_SCORE_KEY) || 0),
@@ -348,6 +543,7 @@
         rewriteUntil: 0,
         floater: null,
         camKick: 0,
+        collapseAt: 0,
         yaw: 0.55,
         pitch: 0.26
       };
@@ -400,6 +596,11 @@
         mesh.material.emissiveIntensity = glow ? 0.55 : 0.08;
         mesh.material.depthWrite = alpha > 0.5;
       }
+
+      const collapseTint = new THREE.Color("#ff4a32");
+      const clearTint = new THREE.Color("#ffe7a3");
+      const sliceTint = new THREE.Color("#fff6d2");
+      const collapseBase = new THREE.Color();
 
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x0b0806);
@@ -504,22 +705,41 @@
       const ghosts = Array.from({ length: 4 }, makeCube);
       ghosts.forEach((cube) => well.add(cube));
 
+      const NEXT_W = 168;
+      const NEXT_H = 176;
+      const PREVIEW_COUNT = 3;
       const nextScene = new THREE.Scene();
       nextScene.background = new THREE.Color(0x0d0907);
-      const nextCamera = new THREE.PerspectiveCamera(40, 168 / 120, 0.1, 50);
-      nextCamera.position.set(2.4, 2.2, 6.2);
-      nextCamera.lookAt(0, 0, 0);
+      const nextCamera = new THREE.PerspectiveCamera(32, NEXT_W / NEXT_H, 0.1, 50);
+      nextCamera.position.set(0, -0.15, 11.2);
+      nextCamera.lookAt(0, -0.15, 0);
       nextScene.add(new THREE.AmbientLight(0xffffff, 0.7));
       const nextKey = new THREE.DirectionalLight(0xfff0d0, 1.1);
       nextKey.position.set(3, 5, 6);
       nextScene.add(nextKey);
-      const nextGroup = new THREE.Group();
-      nextScene.add(nextGroup);
-      const nextCubes = Array.from({ length: 4 }, makeCube);
-      nextCubes.forEach((cube) => nextGroup.add(cube));
+      const previewSlots = [
+        { x: 0, y: 1.15, scale: 1, yaw: 0 },
+        { x: -1.7, y: -1.7, scale: 0.58, yaw: 0.5 },
+        { x: 1.7, y: -1.7, scale: 0.58, yaw: -0.5 }
+      ];
+      const previewGroups = previewSlots.map((slot) => {
+        const group = new THREE.Group();
+        group.position.set(slot.x, slot.y, 0);
+        group.scale.setScalar(slot.scale);
+        group.rotation.y = slot.yaw;
+        nextScene.add(group);
+        return group;
+      });
+      const previewCubes = previewGroups.map((group) => {
+        const cubes = Array.from({ length: 4 }, makeCube);
+        cubes.forEach((cube) => group.add(cube));
+        return cubes;
+      });
       const nextRenderer = new THREE.WebGLRenderer({ antialias: true });
       nextRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      nextRenderer.setSize(168, 120, false);
+      nextRenderer.setSize(NEXT_W, NEXT_H, false);
+      nextRenderer.domElement.style.width = "100%";
+      nextRenderer.domElement.style.height = "100%";
       nextStage.appendChild(nextRenderer.domElement);
 
       function cloneShape(type) {
@@ -546,6 +766,10 @@
         return state.bag.pop();
       }
 
+      function ensureQueue() {
+        while (state.nextQueue.length < PREVIEW_COUNT) state.nextQueue.push(takeType());
+      }
+
       function spawnPiece(type) {
         const shape = cloneShape(type);
         return {
@@ -566,6 +790,65 @@
           }
         }
         return rotated;
+      }
+
+      function rotateCounter(shape) {
+        const size = shape.length;
+        const rotated = Array.from({ length: size }, () => Array(size).fill(0));
+        for (let y = 0; y < size; y += 1) {
+          for (let x = 0; x < size; x += 1) {
+            rotated[size - 1 - x][y] = shape[y][x];
+          }
+        }
+        return rotated;
+      }
+
+      let audioCtx = null;
+
+      function audio() {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        if (!audioCtx) audioCtx = new Ctx();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        return audioCtx;
+      }
+
+      function tone(freq, dur, type, gain, slide) {
+        const ctx = audio();
+        if (!ctx) return;
+        const t0 = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const amp = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t0);
+        if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(1, slide), t0 + dur);
+        amp.gain.setValueAtTime(gain, t0);
+        amp.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        osc.connect(amp);
+        amp.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.02);
+      }
+
+      function playLock() {
+        tone(160, 0.07, "square", 0.045, 90);
+      }
+
+      function playRewrite() {
+        tone(420, 0.14, "sine", 0.06, 880);
+      }
+
+      function playClear(sliceCount) {
+        if (sliceCount > 0) {
+          tone(523, 0.2, "triangle", 0.07, 784);
+          tone(784, 0.24, "sine", 0.05, 1174);
+          return;
+        }
+        tone(620, 0.12, "triangle", 0.055, 880);
+      }
+
+      function playGameOver() {
+        tone(240, 0.5, "sawtooth", 0.045, 55);
       }
 
       function collides(shape, offsetX, offsetY, offsetZ) {
@@ -627,6 +910,16 @@
         return rows;
       }
 
+      function sliceYs(rows) {
+        const counts = Array(ROWS).fill(0);
+        rows.forEach(({ y }) => { counts[y] += 1; });
+        const ys = [];
+        for (let y = 0; y < ROWS; y += 1) {
+          if (counts[y] === DEPTH) ys.push(y);
+        }
+        return ys;
+      }
+
       function removeRows(rows) {
         if (rows.length === 0) return;
         const byZ = Array.from({ length: DEPTH }, () => []);
@@ -640,14 +933,19 @@
         });
 
         const cleared = rows.length;
+        const slices = sliceYs(rows);
         state.lines += cleared;
         state.combo += 1;
 
         const capped = Math.min(cleared, 4);
         let gained = (LINE_SCORES[capped] + Math.max(0, cleared - 4) * 800) * state.level;
+        gained += slices.length * SLICE_BONUS * state.level;
         gained += Math.max(0, state.combo - 1) * 50 * state.level;
-        if (state.rewritten) {
-          gained *= 2;
+        if (state.rewritten) gained *= 2;
+        if (slices.length > 0) {
+          const count = slices.length > 1 ? ` x${slices.length}` : "";
+          showToast(state.rewritten ? `CUR SLICE${count}` : `SLICE${count}`);
+        } else if (state.rewritten) {
           showToast("CUR CLEAR x2");
         } else if (state.combo > 1) {
           showToast(`COMBO x${state.combo}`);
@@ -660,8 +958,10 @@
       }
 
       function spawnNext() {
-        state.current = spawnPiece(state.nextType);
-        state.nextType = takeType();
+        ensureQueue();
+        const type = state.nextQueue.shift();
+        ensureQueue();
+        state.current = spawnPiece(type);
         state.rewritten = false;
         state.rewriteUntil = 0;
         setSwapReady(true);
@@ -673,11 +973,21 @@
 
       function lockCurrent() {
         if (!mergePiece() || state.gameOver) return;
+        playLock();
         const rows = fullRows();
         if (rows.length === 0) state.combo = 0;
         updateHud();
         if (rows.length > 0) {
-          state.clearing = { rows, until: performance.now() + 220 };
+          const slices = sliceYs(rows);
+          const born = performance.now();
+          playClear(slices.length);
+          state.camKick = Math.max(state.camKick, slices.length ? 1.15 : 0.55);
+          state.clearing = {
+            rows,
+            slices,
+            born,
+            until: born + (slices.length ? 480 : 300)
+          };
         } else {
           spawnNext();
         }
@@ -695,10 +1005,10 @@
         return true;
       }
 
-      function tryRotate() {
+      function tryRotate(direction = 1) {
         const piece = state.current;
         if (!piece || piece.type === "O" || state.gameOver || state.paused || state.clearing) return;
-        const rotated = rotateClockwise(piece.shape);
+        const rotated = direction < 0 ? rotateCounter(piece.shape) : rotateClockwise(piece.shape);
         const kicks = [0, -1, 1, -2, 2];
         for (const kick of kicks) {
           if (!collides(rotated, piece.x + kick, piece.y, piece.z)) {
@@ -746,7 +1056,9 @@
         const piece = state.current;
         if (!piece || !state.canSwap || state.gameOver || state.paused || state.clearing) return;
 
-        const nextShape = cloneShape(state.nextType);
+        ensureQueue();
+        const nextType = state.nextQueue[0];
+        const nextShape = cloneShape(nextType);
         const x = piece.x + Math.floor((piece.shape[0].length - nextShape[0].length) / 2);
         const y = piece.y;
         const z = piece.z;
@@ -773,25 +1085,26 @@
         }
 
         if (!placed) {
-          const spawned = spawnPiece(state.nextType);
+          const spawned = spawnPiece(nextType);
           if (collides(spawned.shape, spawned.x, spawned.y, spawned.z)) return;
           placed = { x: spawned.x, y: spawned.y, z: spawned.z };
         }
 
         const previousType = piece.type;
         state.current = {
-          type: state.nextType,
+          type: nextType,
           shape: nextShape,
           x: placed.x,
           y: placed.y,
           z: placed.z
         };
-        state.nextType = previousType;
+        state.nextQueue[0] = previousType;
         state.rewritten = true;
         state.rewriteUntil = performance.now() + REWRITE_MS;
         state.dropAcc = 0;
         setSwapReady(false);
         showToast("REWRITE");
+        playRewrite();
         syncNext();
       }
 
@@ -810,12 +1123,19 @@
       }
 
       function endGame() {
+        if (state.gameOver) return;
         state.gameOver = true;
         state.paused = false;
+        state.collapseAt = performance.now();
+        state.camKick = 1.8;
+        state.floater = null;
+        toastEl.style.opacity = "0";
+        playGameOver();
         overlayTitle.textContent = "Game Over";
         overlayMessage.textContent = `최종 점수 ${state.score.toLocaleString()}`;
         restartBtn.textContent = "다시 시작 (Restart)";
-        overlay.classList.add("visible");
+        stageEl.classList.add("game-over");
+        overlay.classList.add("visible", "game-over");
       }
 
       function showPaused(show) {
@@ -829,7 +1149,8 @@
       function resetGame() {
         state.board = createBoard();
         state.bag = shuffleBag();
-        state.nextType = takeType();
+        state.nextQueue = [];
+        ensureQueue();
         state.score = 0;
         state.lines = 0;
         state.level = 1;
@@ -845,7 +1166,9 @@
         state.rewriteUntil = 0;
         state.floater = null;
         state.camKick = 0;
-        overlay.classList.remove("visible");
+        state.collapseAt = 0;
+        stageEl.classList.remove("game-over");
+        overlay.classList.remove("visible", "game-over");
         restartBtn.textContent = "다시 시작 (Restart)";
         spawnNext();
         updateHud();
@@ -866,7 +1189,33 @@
         }
       }
 
+      function scatterPiece(age) {
+        const piece = state.current;
+        if (!piece) return;
+        const shape = piece.shape;
+        let used = 0;
+        for (let y = 0; y < shape.length; y += 1) {
+          for (let x = 0; x < shape[y].length; x += 1) {
+            if (!shape[y][x]) continue;
+            const mesh = active[used];
+            used += 1;
+            const dir = used % 2 ? 1 : -1;
+            const t = Math.max(0, age * 1.15);
+            mesh.position.copy(cellPos(piece.x + x, piece.y + y, piece.z));
+            mesh.position.x += dir * t * 2.2;
+            mesh.position.y += 1.4 * t - t * t * 6;
+            mesh.position.z += (used - 2) * t * 0.85;
+            mesh.rotation.z = dir * t * 4;
+            mesh.rotation.y = t * 2.2;
+            paintCube(mesh, COLORS[piece.type], true, Math.max(0, 1 - t * 0.7));
+            mesh.scale.setScalar(Math.max(0.2, 1 - t * 0.35));
+          }
+        }
+      }
+
       function syncBoard() {
+        const collapsing = state.gameOver && state.collapseAt > 0;
+        const age = collapsing ? (performance.now() - state.collapseAt) / 1000 : 0;
         let i = 0;
         for (let z = 0; z < DEPTH; z += 1) {
           for (let y = 0; y < ROWS; y += 1) {
@@ -874,22 +1223,70 @@
               const mesh = locked[i];
               i += 1;
               const type = state.board[z][y][x];
+              mesh.rotation.set(0, 0, 0);
               if (!type) {
                 mesh.visible = false;
+                mesh.scale.setScalar(1);
                 continue;
               }
               mesh.position.copy(cellPos(x, y, z));
-              const flashing = state.clearing && state.clearing.rows.some((row) => row.z === z && row.y === y);
-              paintCube(mesh, flashing ? "#fff4d6" : COLORS[type], flashing, 1);
-              mesh.scale.setScalar(flashing ? 1.08 : 1);
+              if (collapsing) {
+                const delay = y * 0.028 + ((x * 3 + z) % 5) * 0.012;
+                const t = Math.max(0, age - delay);
+                const dir = ((x + z) & 1) ? 1 : -1;
+                mesh.position.x += dir * Math.min(t, 1.2) * 0.4;
+                mesh.position.y -= t * t * 14;
+                mesh.rotation.z = dir * t * 1.5;
+                mesh.rotation.x = t * 0.5;
+                collapseBase.set(COLORS[type]).lerp(collapseTint, Math.min(1, t * 1.15));
+                paintCube(mesh, collapseBase, t < 0.22, Math.max(0.05, 1 - t * 0.55));
+                mesh.scale.setScalar(Math.max(0.12, 1 - t * 0.42));
+              } else if (state.clearing) {
+                const span = Math.max(1, state.clearing.until - state.clearing.born);
+                const t = Math.min(1, (performance.now() - state.clearing.born) / span);
+                const bursting = state.clearing.rows.some((row) => row.z === z && row.y === y);
+                if (bursting) {
+                  const slice = state.clearing.slices.includes(y);
+                  const dir = ((x + z) & 1) ? 1 : -1;
+                  const kick = slice ? 1.35 : 1;
+                  mesh.position.y += t * 0.45 * kick;
+                  mesh.position.x += dir * t * 0.7 * kick;
+                  mesh.position.z += (z - 1) * t * 0.55 * kick;
+                  mesh.rotation.z = dir * t * 1.4;
+                  collapseBase.set(COLORS[type]).lerp(slice ? sliceTint : clearTint, Math.min(1, t * 1.4));
+                  paintCube(mesh, collapseBase, true, Math.max(0, 1 - t * t));
+                  mesh.scale.setScalar(1 + t * (slice ? 0.55 : 0.28));
+                } else {
+                  let drop = 0;
+                  state.clearing.rows.forEach((row) => {
+                    if (row.z === z && row.y > y) drop += 1;
+                  });
+                  const ease = t * t * (3 - 2 * t);
+                  mesh.position.y -= drop * ease;
+                  paintCube(mesh, COLORS[type], false, 1);
+                  mesh.scale.setScalar(1);
+                }
+              } else {
+                paintCube(mesh, COLORS[type], false, 1);
+                mesh.scale.setScalar(1);
+              }
             }
           }
         }
 
-        active.forEach((cube) => { cube.visible = false; });
+        active.forEach((cube) => {
+          cube.visible = false;
+          cube.rotation.set(0, 0, 0);
+          cube.scale.setScalar(1);
+        });
         ghosts.forEach((cube) => { cube.visible = false; });
+        if (collapsing) {
+          scatterPiece(age);
+          return;
+        }
+
         const piece = state.current;
-        if (!piece || state.gameOver) return;
+        if (!piece) return;
 
         const gy = ghostY(piece);
         placeShape(ghosts, piece.shape, piece.x, gy, piece.z, COLORS[piece.type], false, 0.22);
@@ -897,47 +1294,63 @@
       }
 
       function syncNext() {
-        nextCubes.forEach((cube) => { cube.visible = false; });
-        if (!state.nextType) return;
-        const shape = SHAPES[state.nextType];
-        const color = COLORS[state.nextType];
-        let used = 0;
-        let minX = 99;
-        let maxX = -99;
-        let minY = 99;
-        let maxY = -99;
-        for (let y = 0; y < shape.length; y += 1) {
-          for (let x = 0; x < shape[y].length; x += 1) {
-            if (!shape[y][x]) continue;
-            minX = Math.min(minX, x);
-            maxX = Math.max(maxX, x);
-            minY = Math.min(minY, y);
-            maxY = Math.max(maxY, y);
+        for (let i = 0; i < PREVIEW_COUNT; i += 1) {
+          const cubes = previewCubes[i];
+          cubes.forEach((cube) => { cube.visible = false; });
+          const type = state.nextQueue[i];
+          if (!type) continue;
+          const shape = SHAPES[type];
+          const color = COLORS[type];
+          const primary = i === 0;
+          let used = 0;
+          let minX = 99;
+          let maxX = -99;
+          let minY = 99;
+          let maxY = -99;
+          for (let y = 0; y < shape.length; y += 1) {
+            for (let x = 0; x < shape[y].length; x += 1) {
+              if (!shape[y][x]) continue;
+              minX = Math.min(minX, x);
+              maxX = Math.max(maxX, x);
+              minY = Math.min(minY, y);
+              maxY = Math.max(maxY, y);
+            }
           }
-        }
-        const cx = (minX + maxX) / 2;
-        const cy = (minY + maxY) / 2;
-        for (let y = 0; y < shape.length; y += 1) {
-          for (let x = 0; x < shape[y].length; x += 1) {
-            if (!shape[y][x]) continue;
-            const mesh = nextCubes[used];
-            used += 1;
-            mesh.position.set(x - cx, -(y - cy), 0);
-            paintCube(mesh, color, state.canSwap, state.canSwap ? 1 : 0.55);
+          const cx = (minX + maxX) / 2;
+          const cy = (minY + maxY) / 2;
+          for (let y = 0; y < shape.length; y += 1) {
+            for (let x = 0; x < shape[y].length; x += 1) {
+              if (!shape[y][x]) continue;
+              const mesh = cubes[used];
+              used += 1;
+              mesh.position.set(x - cx, -(y - cy), 0);
+              const glow = primary && state.canSwap;
+              const alpha = primary ? (state.canSwap ? 1 : 0.55) : 1;
+              paintCube(mesh, color, glow, alpha);
+            }
           }
         }
       }
 
       function updateCamera() {
-        const dist = 36 - state.camKick * 2.2;
+        let dist = 36 - state.camKick * 2.2;
+        let shakeX = 0;
+        let shakeY = 0;
+        if (state.gameOver && state.collapseAt) {
+          const age = (performance.now() - state.collapseAt) / 1000;
+          const amp = Math.max(0, 0.62 - age);
+          shakeX = Math.sin(age * 64) * amp * 0.85;
+          shakeY = Math.cos(age * 47) * amp * 0.5;
+          dist += Math.min(age, 0.85) * 4;
+        }
         const yaw = state.yaw;
         const pitch = state.pitch;
         camera.position.set(
-          Math.sin(yaw) * Math.cos(pitch) * dist,
-          Math.sin(pitch) * dist + 1.2,
+          Math.sin(yaw) * Math.cos(pitch) * dist + shakeX,
+          Math.sin(pitch) * dist + 1.2 + shakeY,
           Math.cos(yaw) * Math.cos(pitch) * dist
         );
-        camera.lookAt(0, -0.6, 0);
+        camera.lookAt(shakeX * 0.4, -0.6, 0);
       }
 
       function syncToast(ts) {
@@ -983,8 +1396,28 @@
         }
 
         state.camKick *= 0.86;
-        nextGroup.rotation.y = ts * 0.0016;
-        wellLight.intensity = state.rewritten ? 2.1 : 1.3;
+        previewGroups[0].rotation.y = ts * 0.0016;
+        if (state.gameOver && state.collapseAt) {
+          const age = (ts - state.collapseAt) / 1000;
+          const burst = Math.max(0, 1 - age * 1.25);
+          wellLight.color.set(burst > 0.15 ? 0xff5a32 : 0xf0b429);
+          wellLight.intensity = 1.3 + burst * 5;
+          scene.background.set(burst > 0.72 ? 0x3a120c : 0x0b0806);
+          scene.fog.color.set(burst > 0.08 ? 0x2a0c08 : 0x0b0806);
+        } else if (state.clearing) {
+          const slice = state.clearing.slices.length > 0;
+          const span = Math.max(1, state.clearing.until - state.clearing.born);
+          const t = Math.min(1, (ts - state.clearing.born) / span);
+          wellLight.color.set(slice ? 0xfff6d0 : 0xf0b429);
+          wellLight.intensity = (slice ? 3.4 : 2.3) * (1 - t * 0.45);
+          scene.background.set(0x0b0806);
+          scene.fog.color.set(0x0b0806);
+        } else {
+          wellLight.color.set(0xf0b429);
+          wellLight.intensity = state.rewritten ? 2.1 : 1.3;
+          scene.background.set(0x0b0806);
+          scene.fog.color.set(0x0b0806);
+        }
         updateCamera();
         syncBoard();
         syncToast(ts);
@@ -995,6 +1428,7 @@
 
       function onKeyDown(event) {
         const key = event.key;
+        audio();
         if (["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " "].includes(key)) {
           event.preventDefault();
         }
@@ -1002,8 +1436,14 @@
           event.preventDefault();
         }
 
+        if (key === "r" || key === "R") {
+          event.preventDefault();
+          if (!event.repeat) resetGame();
+          return;
+        }
+
         if (state.gameOver) {
-          if (key === "Enter" || key === "r" || key === "R") resetGame();
+          if (key === "Enter") resetGame();
           return;
         }
 
@@ -1024,6 +1464,12 @@
         }
         if (key === "e" || key === "E") {
           state.yaw = Math.min(1.2, state.yaw + 0.08);
+          return;
+        }
+
+        if (key === "z" || key === "Z") {
+          event.preventDefault();
+          if (!state.paused && !event.repeat) tryRotate(-1);
           return;
         }
 
