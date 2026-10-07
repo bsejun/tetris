@@ -1,0 +1,2436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CURTRIS 3D</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #100b08;
+      --panel: rgba(32, 20, 14, 0.92);
+      --line: rgba(240, 180, 90, 0.18);
+      --text: #f6eee4;
+      --muted: #b79a82;
+      --accent: #f0b429;
+      --danger: #ff6b6b;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: "Noto Sans KR", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 50% -8%, rgba(240, 180, 41, 0.16), transparent 55%),
+        radial-gradient(800px 480px at 80% 110%, rgba(255, 106, 61, 0.12), transparent 50%),
+        var(--bg);
+      min-height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 62px 12px 28px;
+      overflow: auto;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 8;
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(16, 11, 8, 0.86);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar button {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      background: transparent;
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+
+    .topbar button.on {
+      color: #1a1108;
+      background: var(--accent);
+    }
+
+    .arena {
+      display: flex;
+      align-items: stretch;
+      gap: 18px;
+    }
+
+    .app {
+      display: flex;
+      align-items: stretch;
+      gap: 16px;
+      padding: 8px;
+    }
+
+    .vs-mark {
+      align-self: center;
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      text-shadow: 0 0 18px rgba(240, 180, 41, 0.45);
+    }
+
+    .arena.solo .vs-mark,
+    .arena.solo .seat-1,
+    .arena.solo .attack-rules,
+    .arena.solo .garbage-row { display: none; }
+
+    .seat-1 .attack-rules { display: none; }
+    .help-p2 { display: none; }
+
+    .seat.input-on .stage {
+      box-shadow: var(--shadow), 0 0 0 3px #f0b429, 0 0 28px rgba(240, 180, 41, 0.45);
+    }
+
+    .pad-status {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px dashed rgba(240, 180, 41, 0.5);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .pad-status.on {
+      border-style: solid;
+      background: rgba(240, 180, 41, 0.16);
+      color: var(--text);
+    }
+
+    .arena.solo .pad-status { display: none; }
+
+    .attack-rules p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .garbage.warn { color: var(--danger); }
+
+    .arena.versus .hud { width: 176px; }
+    .arena.versus .brand h1 { font-size: 28px; }
+    .arena.versus .view { width: 300px; height: 600px; }
+    .arena.versus .next-frame { width: 144px; height: 150px; }
+    .arena.versus .side-views { width: 220px; height: 620px; }
+
+    .side-views {
+      position: relative;
+      align-self: flex-start;
+      width: 248px;
+      height: 740px;
+      padding: 36px 8px 8px;
+      border-radius: 22px;
+      border: 2px solid #f0b429;
+      background:
+        linear-gradient(180deg, rgba(255, 210, 90, 0.22), rgba(40, 22, 12, 0.96));
+      box-shadow:
+        var(--shadow),
+        0 0 0 1px rgba(255, 230, 160, 0.25) inset,
+        0 0 36px rgba(240, 180, 41, 0.45);
+    }
+
+    .side-head {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      right: 10px;
+      z-index: 3;
+      font-family: Syne, sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: #1a1108;
+      text-align: center;
+      padding: 5px 0;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 16px rgba(240, 180, 41, 0.55);
+    }
+
+    .side-stack {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .side-views .multiview {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      background: #2a1c12;
+    }
+
+    .side-frame {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 1;
+      border: 2px solid var(--tint, #f0b429);
+      border-radius: 10px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 0 16px color-mix(in srgb, var(--tint, #f0b429) 45%, transparent);
+      pointer-events: none;
+    }
+
+    .side-label {
+      position: absolute;
+      left: 14px;
+      z-index: 2;
+      padding: 5px 10px 4px;
+      border-radius: 8px;
+      border: 1px solid color-mix(in srgb, var(--tint, #f0b429) 70%, #000);
+      background: rgba(10, 7, 5, 0.88);
+      font-family: Syne, sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: var(--tint, #f0b429);
+      text-shadow: 0 0 10px color-mix(in srgb, var(--tint, #f0b429) 70%, transparent);
+      pointer-events: none;
+    }
+
+    .side-label small {
+      display: block;
+      margin-top: 2px;
+      font-family: "Noto Sans KR", sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0;
+      color: #f6eee4;
+    }
+
+    .overlay.victory h2 {
+      color: var(--accent);
+      text-shadow: 0 0 18px rgba(240, 180, 41, 0.55);
+    }
+
+    .overlay.victory .go-hint { display: block; }
+
+    .hud {
+      width: 210px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .brand h1 {
+      font-family: Syne, sans-serif;
+      font-size: 34px;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      text-shadow: 0 0 22px rgba(240, 180, 41, 0.4);
+    }
+
+    .brand p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel h2 {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .score-value {
+      font-family: Syne, sans-serif;
+      font-size: 30px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stat-row strong {
+      color: var(--text);
+      font-family: Syne, sans-serif;
+      font-size: 16px;
+    }
+
+    .next-panel { transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s; }
+    .next-panel.ready {
+      border-color: rgba(240, 180, 41, 0.55);
+      box-shadow: var(--shadow), 0 0 22px rgba(240, 180, 41, 0.18);
+    }
+    .next-panel.used { opacity: 0.62; }
+
+    .next-frame {
+      position: relative;
+      width: 168px;
+      height: 176px;
+    }
+
+    .next-stage {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #0d0907;
+    }
+
+    .next-stage canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .q-label {
+      position: absolute;
+      bottom: 6px;
+      z-index: 1;
+      font-family: Syne, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .q3 { left: 30px; }
+    .q4 { right: 30px; }
+
+    .swap-status {
+      margin-top: 8px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+    }
+    .next-panel.used .swap-status { color: var(--muted); }
+
+    .help kbd {
+      display: inline-block;
+      min-width: 22px;
+      padding: 1px 6px;
+      margin-right: 8px;
+      border: 1px solid var(--line);
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      background: #1a110c;
+      font-size: 11px;
+      color: var(--accent);
+      text-align: center;
+    }
+
+    .help li {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.9;
+    }
+
+    .stage {
+      position: relative;
+      align-self: flex-start;
+      padding: 10px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(240, 180, 41, 0.22), rgba(255, 106, 61, 0.1));
+      box-shadow: var(--shadow), 0 0 40px rgba(240, 180, 41, 0.1);
+    }
+
+    .view {
+      display: block;
+      width: 430px;
+      height: 720px;
+      border-radius: 12px;
+      background: #0b0806;
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 38%;
+      transform: translate(-50%, -50%);
+      font-family: Syne, sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      text-shadow: 0 0 22px rgba(240, 180, 41, 0.55);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 10px;
+      display: none;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(16, 10, 7, 0.78);
+      backdrop-filter: blur(8px);
+      text-align: center;
+      padding: 24px;
+    }
+
+    .overlay.visible { display: grid; }
+
+    .overlay h2 {
+      font-family: Syne, sans-serif;
+      font-size: 34px;
+      color: var(--danger);
+    }
+
+    .overlay p {
+      margin: 12px 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .overlay button {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1108;
+      background: var(--accent);
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 28px;
+      cursor: pointer;
+      box-shadow: 0 0 24px rgba(240, 180, 41, 0.35);
+    }
+
+    .overlay-card { position: relative; z-index: 4; }
+
+    .go-hint { display: none; }
+
+    .go-flash,
+    .go-veil,
+    .go-fx { display: none; }
+
+    .overlay.game-over {
+      background: transparent;
+      backdrop-filter: none;
+    }
+
+    .overlay.game-over .go-flash,
+    .overlay.game-over .go-veil,
+    .overlay.game-over .go-fx {
+      display: block;
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .overlay.game-over .go-flash {
+      z-index: 1;
+      background: #fff1e4;
+      opacity: 0;
+      animation: goFlash 0.35s ease-out forwards;
+    }
+
+    .overlay.game-over .go-veil {
+      z-index: 2;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255, 72, 36, 0.28), rgba(10, 5, 3, 0.88) 62%);
+      opacity: 0;
+      animation: goVeil 0.65s 0.82s ease forwards;
+    }
+
+    .overlay.game-over .go-veil::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0 2px,
+        rgba(0, 0, 0, 0.22) 2px 3px
+      );
+      opacity: 0.45;
+      animation: goScan 7s linear infinite;
+    }
+
+    .overlay.game-over .go-fx { z-index: 3; }
+
+    .shock {
+      position: absolute;
+      left: 50%;
+      top: 40%;
+      width: 48px;
+      height: 48px;
+      margin: -24px 0 0 -24px;
+      border: 2px solid rgba(255, 120, 60, 0.85);
+      border-radius: 50%;
+      box-shadow: 0 0 18px rgba(255, 70, 30, 0.45);
+      animation: goShock 1.15s ease-out infinite;
+    }
+
+    .shock.delay { animation-delay: 0.42s; }
+
+    .ember {
+      position: absolute;
+      left: var(--x);
+      bottom: 16%;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #ffc27a;
+      box-shadow: 0 0 10px #ff5a32;
+      opacity: 0;
+      animation: goRise var(--t) var(--d) ease-in infinite;
+    }
+
+    .overlay.game-over h2 {
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 18px rgba(255, 70, 40, 0.85), 0 0 42px rgba(255, 40, 20, 0.45);
+      animation: goSlam 0.62s 0.9s cubic-bezier(0.16, 1.25, 0.3, 1) both;
+    }
+
+    .overlay.game-over .overlay-card p,
+    .overlay.game-over .overlay-card button {
+      animation: goFade 0.4s 1.15s both;
+    }
+
+    .overlay.game-over .go-hint {
+      display: block;
+      margin: -6px 0 18px;
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    .stage.game-over {
+      animation: stagePulse 1.15s ease;
+    }
+
+    @keyframes goFlash {
+      0% { opacity: 0.9; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes goVeil {
+      to { opacity: 1; }
+    }
+
+    @keyframes goScan {
+      from { transform: translateY(0); }
+      to { transform: translateY(3px); }
+    }
+
+    @keyframes goShock {
+      0% { transform: scale(0.15); opacity: 0.95; }
+      100% { transform: scale(16); opacity: 0; }
+    }
+
+    @keyframes goRise {
+      0% { transform: translateY(0) scale(1); opacity: 0; }
+      18% { opacity: 1; }
+      100% { transform: translateY(-260px) scale(0.25); opacity: 0; }
+    }
+
+    @keyframes goSlam {
+      0% { transform: scale(1.85); filter: blur(8px); opacity: 0; }
+      100% { transform: scale(1); filter: blur(0); opacity: 1; }
+    }
+
+    @keyframes goFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes stagePulse {
+      0% { box-shadow: var(--shadow), 0 0 0 rgba(255, 70, 40, 0); }
+      28% { box-shadow: var(--shadow), 0 0 54px rgba(255, 64, 28, 0.7); }
+      100% { box-shadow: var(--shadow), 0 0 40px rgba(240, 180, 41, 0.1); }
+    }
+
+    @media (max-width: 1480px) {
+      .arena { flex-direction: column; align-items: center; }
+      .app { flex-direction: column; align-items: center; gap: 16px; }
+      .hud { width: min(430px, 100%); }
+      .view, .arena.versus .view { width: min(430px, 92vw); height: 62vh; }
+      .side-views, .arena.versus .side-views { width: min(430px, 92vw); height: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <button type="button" id="mode-solo">솔로</button>
+    <button type="button" id="mode-vs" class="on">2인 대전</button>
+  </header>
+  <div class="arena versus" id="arena">
+  <div class="app seat seat-0" id="seat-0">
+    <aside class="hud">
+      <div class="brand">
+        <h1 class="brand-title">TETRIS</h1>
+        <p class="blurb">2인 대전 · 줄을 지우면 상대에게 공격</p>
+        <div class="pad-status">다른 키보드에서 아무 키 → P1</div>
+      </div>
+      <section class="panel">
+        <h2>Score</h2>
+        <div class="score-value" id="score">0</div>
+        <div class="stat-row">최고 기록 <strong class="high-score" id="high-score">0</strong></div>
+        <div class="stat-row">줄 <strong class="lines" id="lines">0</strong></div>
+        <div class="stat-row">레벨 <strong class="level" id="level">1</strong></div>
+        <div class="stat-row">콤보 <strong class="combo" id="combo">0</strong></div>
+        <div class="stat-row">깊이 <strong class="depth-hud" id="depth-hud">2 / 3</strong></div>
+        <div class="stat-row garbage-row">받을 공격 <strong class="garbage" id="garbage">0</strong></div>
+      </section>
+      <section class="panel next-panel ready" id="next-panel">
+        <h2>Next</h2>
+        <div class="next-frame">
+          <div class="next-stage" id="next-stage"></div>
+          <span class="q-label q3">3</span>
+          <span class="q-label q4">4</span>
+        </div>
+        <div class="swap-status" id="swap-status">REWRITE READY</div>
+      </section>
+      <section class="panel attack-rules">
+        <h2>공격</h2>
+        <p>2줄 1칸 · 3줄 2칸 · 4줄 이상 4칸 · SLICE마다 +2</p>
+        <p>받은 공격은 다음 블록 전에 들어오고, 줄을 지우면 상쇄됩니다.</p>
+      </section>
+      <section class="panel help">
+        <h2>조작</h2>
+        <ul class="help-p1">
+          <li><kbd>←</kbd><kbd>→</kbd> 좌우 이동 (X)</li>
+          <li><kbd>W</kbd><kbd>S</kbd> 앞뒤 이동 (Z)</li>
+          <li><kbd>↑</kbd><kbd>Z</kbd> Z축 회전</li>
+          <li><kbd>A</kbd><kbd>D</kbd> Y축 회전 (스핀)</li>
+          <li><kbd>F</kbd><kbd>G</kbd> X축 회전 (틸트)</li>
+          <li><kbd>↓</kbd> 소프트 드롭</li>
+          <li><kbd>Space</kbd> 하드 드롭</li>
+          <li><kbd>C</kbd> 다음 블록 1회 교체</li>
+          <li><kbd>Q</kbd><kbd>E</kbd> 두 우물 시점</li>
+          <li><kbd>P</kbd> 일시정지</li>
+          <li><kbd>R</kbd> 다시 시작</li>
+          <li>키보드 2개: 먼저 누른 쪽 P1, 다음 쪽 P2</li>
+        </ul>
+      </section>
+    </aside>
+
+    <main class="stage" id="stage">
+      <canvas class="view" id="view" width="430" height="720"></canvas>
+      <div class="toast" id="toast"></div>
+      <div class="overlay" id="overlay">
+        <div class="go-flash" aria-hidden="true"></div>
+        <div class="go-veil" aria-hidden="true"></div>
+        <div class="go-fx" aria-hidden="true">
+          <span class="shock"></span>
+          <span class="shock delay"></span>
+          <span class="ember" style="--x:8%; --d:0.05s; --t:1.7s"></span>
+          <span class="ember" style="--x:18%; --d:0.4s; --t:2.1s"></span>
+          <span class="ember" style="--x:31%; --d:0.15s; --t:1.5s"></span>
+          <span class="ember" style="--x:44%; --d:0.7s; --t:1.9s"></span>
+          <span class="ember" style="--x:57%; --d:0.25s; --t:2.3s"></span>
+          <span class="ember" style="--x:69%; --d:0.55s; --t:1.6s"></span>
+          <span class="ember" style="--x:81%; --d:0.1s; --t:2s"></span>
+          <span class="ember" style="--x:92%; --d:0.85s; --t:1.8s"></span>
+        </div>
+        <div class="overlay-card">
+          <h2 class="overlay-title" id="overlay-title">Game Over</h2>
+          <p class="overlay-message" id="overlay-message">최종 점수 0</p>
+          <p class="go-hint">R 또는 Enter로 다시 시작</p>
+          <button type="button" class="restart" id="restart">다시 시작 (Restart)</button>
+        </div>
+      </div>
+    </main>
+    <aside class="side-views">
+      <div class="side-head">보조 시점</div>
+      <div class="side-stack">
+        <canvas class="multiview" width="150" height="740"></canvas>
+      </div>
+    </aside>
+  </div>
+  <div class="vs-mark" id="vs-mark">VS</div>
+  <div class="app seat seat-1" id="seat-1"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const COLS = 10;
+      const ROWS = 20;
+      const DEPTH = 3;
+      const HIGH_SCORE_KEY = "curtris-high-score";
+      const LINE_SCORES = [0, 100, 300, 500, 800];
+      const SLICE_BONUS = 1200;
+      const REWRITE_MS = 420;
+
+      // 게임 좌표계: x = 좌우(0..COLS-1), y = 위아래(0 = 맨 위, 아래로 증가), z = 앞뒤(0 = 뒤, DEPTH-1 = 앞).
+      // 조각은 (x, y, z) 셀 목록이며 min 좌표가 0으로 정규화된 상태로 보관한다.
+      function cube(x, y, z) {
+        return { x, y, z };
+      }
+
+      const SHAPES = {
+        // 평면 테트로미노 (z = 0 한 층)
+        I: [cube(0, 0, 0), cube(1, 0, 0), cube(2, 0, 0), cube(3, 0, 0)],
+        J: [cube(0, 0, 0), cube(0, 1, 0), cube(1, 1, 0), cube(2, 1, 0)],
+        L: [cube(2, 0, 0), cube(0, 1, 0), cube(1, 1, 0), cube(2, 1, 0)],
+        O: [cube(0, 0, 0), cube(1, 0, 0), cube(0, 1, 0), cube(1, 1, 0)],
+        S: [cube(1, 0, 0), cube(2, 0, 0), cube(0, 1, 0), cube(1, 1, 0)],
+        T: [cube(1, 0, 0), cube(0, 1, 0), cube(1, 1, 0), cube(2, 1, 0)],
+        Z: [cube(0, 0, 0), cube(1, 0, 0), cube(1, 1, 0), cube(2, 1, 0)],
+        // 비평면 테트라큐브 (두 z 층에 걸침)
+        // B 가지형: z=0 ■■ / ■ · , z=1 ■ · / · ·
+        B: [cube(0, 0, 0), cube(1, 0, 0), cube(0, 1, 0), cube(0, 0, 1)],
+        // R 오른나사: z=0 ■■ / · ■ , z=1 · · / · ■
+        R: [cube(0, 0, 0), cube(1, 0, 0), cube(1, 1, 0), cube(1, 1, 1)],
+        // Q 왼나사: z=0 · · / · ■ , z=1 ■■ / · ■
+        Q: [cube(1, 1, 0), cube(0, 0, 1), cube(1, 0, 1), cube(1, 1, 1)]
+      };
+
+      const COLORS = {
+        I: "#f0b429",
+        J: "#4ea1ff",
+        L: "#ff8a3d",
+        O: "#ffe066",
+        S: "#3dd68c",
+        T: "#d47bff",
+        Z: "#ff5d6c",
+        B: "#2ee6d6",
+        R: "#ff9ad5",
+        Q: "#b4ff57",
+        X: "#7d6a5c"
+      };
+
+      const seat0 = document.getElementById("seat-0");
+      const seat1 = document.getElementById("seat-1");
+      seat1.innerHTML = seat0.innerHTML;
+      seat1.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+      seat1.querySelector(".brand-title").textContent = "P2";
+      seat1.querySelector(".blurb").textContent = "P1과 같은 키 · 두 번째 키보드";
+
+      let versus = false;
+      let currentPlayer = null;
+      let players = [];
+      let state = null;
+      let locked = null;
+      let active = null;
+      let ghosts = null;
+      let camera = null;
+      let wellLight = null;
+      let scene = null;
+      let renderer = null;
+      let scoreEl = null;
+      let highScoreEl = null;
+      let linesEl = null;
+      let levelEl = null;
+      let comboEl = null;
+      let depthHud = null;
+      let garbageEl = null;
+      let nextPanel = null;
+      let swapStatus = null;
+      let toastEl = null;
+      let stageEl = null;
+      let overlay = null;
+      let overlayTitle = null;
+      let overlayMessage = null;
+      let restartBtn = null;
+      let previewCubes = null;
+      let previewGroups = null;
+      let nextRenderer = null;
+      let nextScene = null;
+      let nextCamera = null;
+      const PREVIEW_COUNT = 3;
+
+      if (typeof THREE === "undefined") {
+        seat0.querySelector(".overlay").classList.add("visible");
+        seat0.querySelector(".overlay-title").textContent = "3D 엔진 로드 실패";
+        seat0.querySelector(".overlay-message").textContent = "인터넷 연결 후 새로고침 해주세요.";
+        return;
+      }
+
+      const cubeGeo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+      const edgeGeo = new THREE.EdgesGeometry(cubeGeo);
+      const edgeMat = new THREE.LineBasicMaterial({
+        color: 0x140c08,
+        transparent: true,
+        opacity: 0.35
+      });
+
+      function cellPos(col, row, layer) {
+        return new THREE.Vector3(
+          col + 0.5 - COLS / 2,
+          ROWS / 2 - row - 0.5,
+          layer + 0.5 - DEPTH / 2
+        );
+      }
+
+      function makeCube() {
+        const mat = new THREE.MeshStandardMaterial({
+          color: "#888888",
+          roughness: 0.34,
+          metalness: 0.28,
+          emissive: "#000000",
+          emissiveIntensity: 0.08
+        });
+        const mesh = new THREE.Mesh(cubeGeo, mat);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.add(new THREE.LineSegments(edgeGeo, edgeMat));
+        mesh.visible = false;
+        return mesh;
+      }
+
+      function paintCube(mesh, color, glow, alpha) {
+        mesh.visible = true;
+        mesh.material.color.set(color);
+        mesh.material.transparent = alpha < 1;
+        mesh.material.opacity = alpha;
+        mesh.material.emissive.set(glow ? "#f0b429" : color);
+        mesh.material.emissiveIntensity = glow ? 0.55 : 0.08;
+        mesh.material.depthWrite = alpha > 0.5;
+      }
+
+      const collapseTint = new THREE.Color("#ff4a32");
+      const clearTint = new THREE.Color("#ffe7a3");
+      const sliceTint = new THREE.Color("#fff6d2");
+      const collapseBase = new THREE.Color();
+
+      function createState(seat) {
+        const key = seat === 0 ? HIGH_SCORE_KEY : `${HIGH_SCORE_KEY}-p2`;
+        return {
+          seat,
+          name: seat === 0 ? "P1" : "P2",
+          board: [],
+          current: null,
+          nextQueue: [],
+          bag: [],
+          score: 0,
+          highScore: Number(localStorage.getItem(key) || 0),
+          lines: 0,
+          level: 1,
+          combo: 0,
+          dropMs: 800,
+          dropAcc: 0,
+          lastTs: 0,
+          softDrop: false,
+          paused: false,
+          gameOver: false,
+          clearing: null,
+          canSwap: true,
+          rewritten: false,
+          rewriteUntil: 0,
+          floater: null,
+          camKick: 0,
+          collapseAt: 0,
+          yaw: seat === 0 ? 0.55 : -0.55,
+          pitch: 0.26,
+          pendingGarbage: 0,
+          victor: false
+        };
+      }
+
+      function createSeat(root, seat) {
+        const viewCanvas = root.querySelector(".view");
+        const nextStageEl = root.querySelector(".next-stage");
+        const seatScene = new THREE.Scene();
+        seatScene.background = new THREE.Color(0x0b0806);
+        seatScene.fog = new THREE.Fog(0x0b0806, 36, 72);
+
+        const viewRect = viewCanvas.getBoundingClientRect();
+        const seatRenderer = new THREE.WebGLRenderer({
+          canvas: viewCanvas,
+          antialias: true
+        });
+        seatRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        seatRenderer.setSize(Math.max(1, viewRect.width), Math.max(1, viewRect.height), false);
+        seatRenderer.shadowMap.enabled = true;
+        seatRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+        seatRenderer.toneMappingExposure = 1.12;
+
+        const seatCamera = new THREE.PerspectiveCamera(
+          34,
+          Math.max(1, viewRect.width) / Math.max(1, viewRect.height),
+          0.1,
+          120
+        );
+
+        seatScene.add(new THREE.AmbientLight(0xffe6c8, 0.42));
+        const key = new THREE.DirectionalLight(0xfff3d6, 1.25);
+        key.position.set(10, 18, 16);
+        key.castShadow = true;
+        key.shadow.mapSize.set(1024, 1024);
+        seatScene.add(key);
+        const fill = new THREE.DirectionalLight(0x4ea1ff, 0.28);
+        fill.position.set(-12, 6, 10);
+        seatScene.add(fill);
+        const seatLight = new THREE.PointLight(0xf0b429, 1.4, 36);
+        seatLight.position.set(0, -8, 5);
+        seatScene.add(seatLight);
+
+        const well = new THREE.Group();
+        seatScene.add(well);
+
+        const wallMat = new THREE.MeshStandardMaterial({
+          color: 0x1b110c,
+          roughness: 0.92,
+          metalness: 0.08,
+          side: THREE.DoubleSide
+        });
+        const depth = DEPTH;
+        const back = new THREE.Mesh(new THREE.PlaneGeometry(COLS, ROWS), wallMat);
+        back.position.z = -depth / 2;
+        back.receiveShadow = true;
+        well.add(back);
+        const left = new THREE.Mesh(new THREE.PlaneGeometry(depth, ROWS), wallMat);
+        left.rotation.y = Math.PI / 2;
+        left.position.set(-COLS / 2, 0, 0);
+        well.add(left);
+        const right = left.clone();
+        right.position.x = COLS / 2;
+        well.add(right);
+        // 왼쪽 벽은 레이어 1, 오른쪽 벽은 레이어 2.
+        // 측면 보조 뷰는 카메라 쪽 벽만 끄고 반대편 벽은 남겨 상자 안을 들여다보는 느낌을 준다.
+        left.layers.set(1);
+        right.layers.set(2);
+        seatCamera.layers.enable(1);
+        seatCamera.layers.enable(2);
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(COLS, depth), wallMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -ROWS / 2;
+        floor.receiveShadow = true;
+        well.add(floor);
+
+        const gridPts = [];
+        const backZ = -depth / 2 + 0.02;
+        const floorY = -ROWS / 2 + 0.02;
+        for (let x = 0; x <= COLS; x += 1) {
+          gridPts.push(x - COLS / 2, -ROWS / 2, backZ, x - COLS / 2, ROWS / 2, backZ);
+        }
+        for (let y = 0; y <= ROWS; y += 1) {
+          gridPts.push(-COLS / 2, y - ROWS / 2, backZ, COLS / 2, y - ROWS / 2, backZ);
+        }
+        for (let x = 0; x <= COLS; x += 1) {
+          gridPts.push(x - COLS / 2, floorY, -depth / 2, x - COLS / 2, floorY, depth / 2);
+        }
+        for (let z = 0; z <= DEPTH; z += 1) {
+          gridPts.push(-COLS / 2, floorY, z - depth / 2, COLS / 2, floorY, z - depth / 2);
+        }
+        const gridGeo = new THREE.BufferGeometry();
+        gridGeo.setAttribute("position", new THREE.Float32BufferAttribute(gridPts, 3));
+        const grid = new THREE.LineSegments(
+          gridGeo,
+          new THREE.LineBasicMaterial({ color: 0xf0b429, transparent: true, opacity: 0.16 })
+        );
+        well.add(grid);
+
+        const rimGeo = new THREE.BufferGeometry();
+        const hw = COLS / 2;
+        const hh = ROWS / 2;
+        const hd = depth / 2;
+        rimGeo.setAttribute("position", new THREE.Float32BufferAttribute([
+          -hw, -hh, hd, hw, -hh, hd,
+          hw, -hh, hd, hw, hh, hd,
+          hw, hh, hd, -hw, hh, hd,
+          -hw, hh, hd, -hw, -hh, hd
+        ], 3));
+        well.add(new THREE.LineSegments(
+          rimGeo,
+          new THREE.LineBasicMaterial({ color: 0xf0b429, transparent: true, opacity: 0.45 })
+        ));
+
+        const seatLocked = Array.from({ length: COLS * ROWS * DEPTH }, makeCube);
+        seatLocked.forEach((cube) => well.add(cube));
+        const seatActive = Array.from({ length: 4 }, makeCube);
+        seatActive.forEach((cube) => well.add(cube));
+        const seatGhosts = Array.from({ length: 4 }, makeCube);
+        seatGhosts.forEach((cube) => well.add(cube));
+
+        const NEXT_W = 168;
+        const NEXT_H = 176;
+        const seatNextScene = new THREE.Scene();
+        seatNextScene.background = new THREE.Color(0x0d0907);
+        const seatNextCamera = new THREE.PerspectiveCamera(32, NEXT_W / NEXT_H, 0.1, 50);
+        seatNextCamera.position.set(0, -0.15, 11.2);
+        seatNextCamera.lookAt(0, -0.15, 0);
+        seatNextScene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const nextKey = new THREE.DirectionalLight(0xfff0d0, 1.1);
+        nextKey.position.set(3, 5, 6);
+        seatNextScene.add(nextKey);
+        const previewSlots = [
+          { x: 0, y: 1.15, scale: 1, yaw: 0 },
+          { x: -1.7, y: -1.7, scale: 0.58, yaw: 0.5 },
+          { x: 1.7, y: -1.7, scale: 0.58, yaw: -0.5 }
+        ];
+        const seatPreviewGroups = previewSlots.map((slot) => {
+          const group = new THREE.Group();
+          group.position.set(slot.x, slot.y, 0);
+          group.scale.setScalar(slot.scale);
+          group.rotation.y = slot.yaw;
+          seatNextScene.add(group);
+          return group;
+        });
+        const seatPreviewCubes = seatPreviewGroups.map((group) => {
+          const cubes = Array.from({ length: 4 }, makeCube);
+          cubes.forEach((cube) => group.add(cube));
+          return cubes;
+        });
+        const seatNextRenderer = new THREE.WebGLRenderer({ antialias: true });
+        seatNextRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        seatNextRenderer.setSize(NEXT_W, NEXT_H, false);
+        seatNextRenderer.domElement.style.width = "100%";
+        seatNextRenderer.domElement.style.height = "100%";
+        nextStageEl.appendChild(seatNextRenderer.domElement);
+
+        // 보조 시점: 같은 장면을 원근 카메라로 정면 / 왼쪽 / 오른쪽 / 위에서 비스듬히 본다.
+        // 게임 좌표는 그대로이고 카메라만 다르다. 메인 뷰와 같은 조명·그림자·톤매핑을 쓴다.
+        const sideStack = root.querySelector(".side-stack");
+        const multiCanvas = root.querySelector(".multiview");
+        const multiRect = multiCanvas.getBoundingClientRect();
+        const multiRenderer = new THREE.WebGLRenderer({ canvas: multiCanvas, antialias: true });
+        multiRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        multiRenderer.setSize(Math.max(1, multiRect.width), Math.max(1, multiRect.height), false);
+        multiRenderer.setClearColor(0x3a2618, 1);
+        multiRenderer.shadowMap.enabled = true;
+        multiRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+        multiRenderer.toneMappingExposure = 1.85;
+        multiRenderer.setScissorTest(true);
+
+        // 보조 뷰 전용 보강 조명·격자(레이어 3). 메인 카메라는 레이어 3을 켜지 않는다.
+        const boostAmbient = new THREE.AmbientLight(0xfff4e4, 1.15);
+        boostAmbient.layers.set(3);
+        seatScene.add(boostAmbient);
+        const boostFill = new THREE.DirectionalLight(0xfff0d0, 1.15);
+        boostFill.position.set(0, 12, 16);
+        boostFill.layers.set(3);
+        seatScene.add(boostFill);
+        const boostKey = new THREE.DirectionalLight(0xffc56a, 0.7);
+        boostKey.position.set(-8, 8, 6);
+        boostKey.layers.set(3);
+        seatScene.add(boostKey);
+        const brightGrid = new THREE.LineSegments(
+          gridGeo,
+          new THREE.LineBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0.55 })
+        );
+        brightGrid.layers.set(3);
+        well.add(brightGrid);
+        const brightRim = new THREE.LineSegments(
+          rimGeo,
+          new THREE.LineBasicMaterial({ color: 0xffe7a3, transparent: true, opacity: 0.9 })
+        );
+        brightRim.layers.set(3);
+        well.add(brightRim);
+
+        const VIEW_FOV = 38;
+        function perspCam(layers) {
+          const cam = new THREE.PerspectiveCamera(VIEW_FOV, 1, 0.1, 120);
+          cam.layers.enable(3);
+          layers.forEach((layer) => cam.layers.enable(layer));
+          return cam;
+        }
+        const views = [
+          { key: "front", label: "FRONT", sub: "정면", frac: 0.32, tint: "#f0b429",
+            camera: perspCam([1, 2]), dir: [0.18, 0.28, 1], up: [0, 1, 0],
+            cw: COLS + 0.8, ch: ROWS + 0.8 },
+          { key: "left", label: "LEFT", sub: "왼쪽 · 오른쪽이 앞", frac: 0.25, tint: "#4ea1ff",
+            camera: perspCam([2]), dir: [-1, 0.22, 0.22], up: [0, 1, 0],
+            cw: DEPTH + 1.1, ch: 9.2 },
+          { key: "right", label: "RIGHT", sub: "오른쪽 · 왼쪽이 앞", frac: 0.25, tint: "#ff8a3d",
+            camera: perspCam([1]), dir: [1, 0.22, 0.22], up: [0, 1, 0],
+            cw: DEPTH + 1.1, ch: 9.2 },
+          { key: "top", label: "TOP", sub: "위 · 아래가 앞", frac: 0.18, tint: "#3dd68c",
+            camera: perspCam([1, 2]), dir: [0, 1, 0.28], up: [0, 0, -1],
+            cw: 7.2, ch: DEPTH + 1.6 }
+        ];
+        const PANEL_GAP = 8;
+        let offset = 0;
+        views.forEach((view) => {
+          const frame = document.createElement("div");
+          frame.className = "side-frame";
+          frame.style.setProperty("--tint", view.tint);
+          const label = document.createElement("div");
+          label.className = "side-label";
+          label.style.setProperty("--tint", view.tint);
+          label.innerHTML = `${view.label}<small>${view.sub}</small>`;
+          sideStack.appendChild(frame);
+          sideStack.appendChild(label);
+          view.frame = frame;
+          view.label = label;
+          view.start = offset;
+          offset += view.frac;
+        });
+
+        function layoutViews() {
+          const rect = multiCanvas.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+          multiRenderer.setSize(rect.width, rect.height, false);
+          const pr = multiRenderer.getPixelRatio();
+          const W = rect.width * pr;
+          const H = rect.height * pr;
+          views.forEach((view) => {
+            const y0 = Math.round(view.start * H) + (view.start > 0 ? PANEL_GAP : 0);
+            const y1 = Math.round((view.start + view.frac) * H);
+            view.rect = { x: 0, y: H - y1, w: W, h: Math.max(1, y1 - y0) };
+            view.camera.aspect = view.rect.w / view.rect.h;
+            view.camera.updateProjectionMatrix();
+            const top = (y0 / pr);
+            const height = Math.max(1, (y1 - y0) / pr - 3);
+            view.frame.style.top = `${top}px`;
+            view.frame.style.height = `${height}px`;
+            view.label.style.top = `${top + 6}px`;
+          });
+        }
+        layoutViews();
+
+        function focusCell() {
+          const piece = state && state.current;
+          if (!piece) return { x: COLS / 2, y: 10, z: 1 };
+          const b = bounds(piece.cells);
+          return {
+            x: piece.x + (b.minX + b.maxX) / 2,
+            y: piece.y + (b.minY + b.maxY) / 2,
+            z: piece.z + (b.minZ + b.maxZ) / 2
+          };
+        }
+
+        function aimView(view) {
+          const focus = focusCell();
+          const world = cellPos(focus.x, focus.y, focus.z);
+          let target;
+          let cw = view.cw;
+          let ch = view.ch;
+          if (view.key === "front") {
+            target = new THREE.Vector3(0, -0.2, 0);
+          } else if (view.key === "top") {
+            target = new THREE.Vector3(world.x, ROWS / 2 - 0.8, world.z);
+          } else {
+            const windowRows = 8;
+            const row = Math.max(windowRows / 2, Math.min(ROWS - 1 - windowRows / 2, focus.y));
+            target = cellPos(COLS / 2 - 0.5, row, DEPTH / 2 - 0.5);
+            cw = DEPTH + 1.1;
+            ch = windowRows + 1.2;
+          }
+          const aspect = Math.max(0.2, view.camera.aspect || 1);
+          const halfTan = Math.tan(THREE.MathUtils.degToRad(VIEW_FOV / 2));
+          const dist = Math.max(ch / 2 / halfTan, cw / 2 / (halfTan * aspect)) * 1.02;
+          const dir = new THREE.Vector3(...view.dir).normalize();
+          view.camera.up.set(...view.up);
+          view.camera.position.copy(target).addScaledVector(dir, dist);
+          view.camera.lookAt(target);
+          view.camera.updateProjectionMatrix();
+        }
+
+        function renderViews(sceneToDraw) {
+          const fog = sceneToDraw.fog;
+          sceneToDraw.fog = null;
+          views.forEach((view) => {
+            if (!view.rect) return;
+            aimView(view);
+            const { x, y, w, h } = view.rect;
+            multiRenderer.setViewport(x, y, w, h);
+            multiRenderer.setScissor(x, y, w, h);
+            multiRenderer.render(sceneToDraw, view.camera);
+          });
+          sceneToDraw.fog = fog;
+        }
+
+        return {
+          root,
+          state: createState(seat),
+          viewCanvas,
+          layoutViews,
+          renderViews,
+          locked: seatLocked,
+          active: seatActive,
+          ghosts: seatGhosts,
+          camera: seatCamera,
+          wellLight: seatLight,
+          scene: seatScene,
+          renderer: seatRenderer,
+          scoreEl: root.querySelector(".score-value"),
+          highScoreEl: root.querySelector(".high-score"),
+          linesEl: root.querySelector(".lines"),
+          levelEl: root.querySelector(".level"),
+          comboEl: root.querySelector(".combo"),
+          depthHud: root.querySelector(".depth-hud"),
+          garbageEl: root.querySelector(".garbage"),
+          nextPanel: root.querySelector(".next-panel"),
+          swapStatus: root.querySelector(".swap-status"),
+          toastEl: root.querySelector(".toast"),
+          stageEl: root.querySelector(".stage"),
+          overlay: root.querySelector(".overlay"),
+          overlayTitle: root.querySelector(".overlay-title"),
+          overlayMessage: root.querySelector(".overlay-message"),
+          restartBtn: root.querySelector(".restart"),
+          previewCubes: seatPreviewCubes,
+          previewGroups: seatPreviewGroups,
+          nextRenderer: seatNextRenderer,
+          nextScene: seatNextScene,
+          nextCamera: seatNextCamera
+        };
+      }
+
+      function bind(player) {
+        currentPlayer = player;
+        state = player.state;
+        locked = player.locked;
+        active = player.active;
+        ghosts = player.ghosts;
+        camera = player.camera;
+        wellLight = player.wellLight;
+        scene = player.scene;
+        renderer = player.renderer;
+        scoreEl = player.scoreEl;
+        highScoreEl = player.highScoreEl;
+        linesEl = player.linesEl;
+        levelEl = player.levelEl;
+        comboEl = player.comboEl;
+        depthHud = player.depthHud;
+        garbageEl = player.garbageEl;
+        nextPanel = player.nextPanel;
+        swapStatus = player.swapStatus;
+        toastEl = player.toastEl;
+        stageEl = player.stageEl;
+        overlay = player.overlay;
+        overlayTitle = player.overlayTitle;
+        overlayMessage = player.overlayMessage;
+        restartBtn = player.restartBtn;
+        previewCubes = player.previewCubes;
+        previewGroups = player.previewGroups;
+        nextRenderer = player.nextRenderer;
+        nextScene = player.nextScene;
+        nextCamera = player.nextCamera;
+      }
+
+      players = [createSeat(seat0, 0), createSeat(seat1, 1)];
+
+      function cloneCells(cells) {
+        return cells.map((c) => cube(c.x, c.y, c.z));
+      }
+
+      function cloneShape(type) {
+        return cloneCells(SHAPES[type]);
+      }
+
+      function bounds(cells) {
+        const b = { minX: 99, maxX: -99, minY: 99, maxY: -99, minZ: 99, maxZ: -99 };
+        cells.forEach((c) => {
+          b.minX = Math.min(b.minX, c.x);
+          b.maxX = Math.max(b.maxX, c.x);
+          b.minY = Math.min(b.minY, c.y);
+          b.maxY = Math.max(b.maxY, c.y);
+          b.minZ = Math.min(b.minZ, c.z);
+          b.maxZ = Math.max(b.maxZ, c.z);
+        });
+        b.w = b.maxX - b.minX + 1;
+        b.h = b.maxY - b.minY + 1;
+        b.d = b.maxZ - b.minZ + 1;
+        return b;
+      }
+
+      // min 좌표가 (0, 0, 0)이 되도록 평행이동한다.
+      function normalizeCells(cells) {
+        const b = bounds(cells);
+        return cells.map((c) => cube(c.x - b.minX, c.y - b.minY, c.z - b.minZ));
+      }
+
+      // 축별 90도 회전. 화면 기준(카메라가 +z 앞에서 봄):
+      //   z축 dir>0: 정면에서 본 시계 방향     (x, y, z) -> (-y,  x,  z)
+      //   x축 dir>0: 윗면이 앞으로 넘어오는 방향 (x, y, z) -> ( x, -z,  y)
+      //   y축 dir>0: 위에서 본 시계 방향       (x, y, z) -> ( z,  y, -x)
+      // y는 아래로 증가하므로 2D 행렬 회전과 부호가 일치한다.
+      function rotateCells(cells, axis, dir) {
+        return cells.map(({ x, y, z }) => {
+          if (axis === "z") return dir > 0 ? cube(-y, x, z) : cube(y, -x, z);
+          if (axis === "x") return dir > 0 ? cube(x, -z, y) : cube(x, z, -y);
+          return dir > 0 ? cube(z, y, -x) : cube(-z, y, x);
+        });
+      }
+
+      // 조각을 회전시키고, 바운딩 박스 중심이 제자리에 남도록 원점을 보정해 돌려준다.
+      function rotatedPiece(piece, axis, dir) {
+        const before = bounds(piece.cells);
+        const cells = normalizeCells(rotateCells(piece.cells, axis, dir));
+        const after = bounds(cells);
+        return {
+          cells,
+          x: piece.x + Math.round((before.w - after.w) / 2),
+          y: piece.y + Math.round((before.h - after.h) / 2),
+          z: piece.z + Math.round((before.d - after.d) / 2),
+          liftLimit: Math.max(0, after.h - before.h)
+        };
+      }
+
+      function createBoard() {
+        return Array.from({ length: DEPTH }, () =>
+          Array.from({ length: ROWS }, () => Array(COLS).fill(null))
+        );
+      }
+
+      function shuffleBag() {
+        const types = Object.keys(SHAPES);
+        for (let i = types.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [types[i], types[j]] = [types[j], types[i]];
+        }
+        return types;
+      }
+
+      function takeType() {
+        if (state.bag.length === 0) state.bag = shuffleBag();
+        return state.bag.pop();
+      }
+
+      function ensureQueue() {
+        while (state.nextQueue.length < PREVIEW_COUNT) state.nextQueue.push(takeType());
+      }
+
+      function spawnPiece(type) {
+        const cells = cloneShape(type);
+        const b = bounds(cells);
+        return {
+          type,
+          cells,
+          x: Math.floor((COLS - b.w) / 2),
+          y: 0,
+          z: Math.floor((DEPTH - b.d) / 2)
+        };
+      }
+
+      let audioCtx = null;
+
+      function audio() {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        if (!audioCtx) audioCtx = new Ctx();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        return audioCtx;
+      }
+
+      function tone(freq, dur, type, gain, slide) {
+        const ctx = audio();
+        if (!ctx) return;
+        const t0 = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const amp = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t0);
+        if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(1, slide), t0 + dur);
+        amp.gain.setValueAtTime(gain, t0);
+        amp.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        osc.connect(amp);
+        amp.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.02);
+      }
+
+      function playLock() {
+        tone(160, 0.07, "square", 0.045, 90);
+      }
+
+      function playRewrite() {
+        tone(420, 0.14, "sine", 0.06, 880);
+      }
+
+      function playClear(sliceCount) {
+        if (sliceCount > 0) {
+          tone(523, 0.2, "triangle", 0.07, 784);
+          tone(784, 0.24, "sine", 0.05, 1174);
+          return;
+        }
+        tone(620, 0.12, "triangle", 0.055, 880);
+      }
+
+      function playGameOver() {
+        tone(240, 0.5, "sawtooth", 0.045, 55);
+      }
+
+      // 모든 셀에 대해 x/y/z 경계와 고정 블록 점유를 검사한다. y < 0(스폰 구역)은 허용.
+      function collides(cells, offsetX, offsetY, offsetZ) {
+        for (let i = 0; i < cells.length; i += 1) {
+          const nx = offsetX + cells[i].x;
+          const ny = offsetY + cells[i].y;
+          const nz = offsetZ + cells[i].z;
+          if (nx < 0 || nx >= COLS || ny >= ROWS || nz < 0 || nz >= DEPTH) return true;
+          if (ny >= 0 && state.board[nz][ny][nx]) return true;
+        }
+        return false;
+      }
+
+      function ghostY(piece) {
+        let y = piece.y;
+        while (!collides(piece.cells, piece.x, y + 1, piece.z)) y += 1;
+        return y;
+      }
+
+      function showToast(text) {
+        state.floater = { text, born: performance.now(), life: 900 };
+        toastEl.textContent = text;
+      }
+
+      function note(text) {
+        if (state.floater && performance.now() - state.floater.born < 50) {
+          state.floater.text = `${state.floater.text} · ${text}`;
+          toastEl.textContent = state.floater.text;
+          return;
+        }
+        showToast(text);
+      }
+
+      function opponent() {
+        return players[state.seat === 0 ? 1 : 0];
+      }
+
+      function matchOver() {
+        const live = versus ? players : [players[0]];
+        return live.some((player) => player.state.gameOver || player.state.victor);
+      }
+
+      function attackPower(cleared, sliceCount) {
+        let power = 0;
+        if (cleared >= 4) power = 4;
+        else if (cleared === 3) power = 2;
+        else if (cleared === 2) power = 1;
+        return power + sliceCount * 2;
+      }
+
+      function emitAttack(power) {
+        if (!versus || power <= 0) return;
+        let amount = power;
+        let canceled = 0;
+        if (state.pendingGarbage > 0) {
+          canceled = Math.min(state.pendingGarbage, amount);
+          state.pendingGarbage -= canceled;
+          amount -= canceled;
+        }
+        const foe = opponent();
+        if (amount > 0 && !foe.state.gameOver && !foe.state.victor) foe.state.pendingGarbage += amount;
+        const bits = [];
+        if (canceled) bits.push(`CANCEL ${canceled}`);
+        if (amount) bits.push(`ATK +${amount}`);
+        if (bits.length) note(bits.join(" · "));
+        updateHud();
+        if (amount > 0 && !foe.state.gameOver && !foe.state.victor) {
+          const mine = currentPlayer;
+          bind(foe);
+          updateHud();
+          showToast(`IN +${amount}`);
+          bind(mine);
+        }
+      }
+
+      function applyPendingGarbage() {
+        const count = state.pendingGarbage;
+        if (!count) return;
+        state.pendingGarbage = 0;
+        for (let n = 0; n < count; n += 1) {
+          if (state.gameOver) return;
+          for (let z = 0; z < DEPTH; z += 1) {
+            if (state.board[z][0].some(Boolean)) {
+              endGame();
+              return;
+            }
+          }
+          const hole = Math.floor(Math.random() * COLS);
+          for (let z = 0; z < DEPTH; z += 1) {
+            state.board[z].shift();
+            const row = Array(COLS).fill("X");
+            row[hole] = null;
+            state.board[z].push(row);
+          }
+        }
+      }
+
+      function setSwapReady(ready) {
+        state.canSwap = ready;
+        nextPanel.classList.toggle("ready", ready);
+        nextPanel.classList.toggle("used", !ready);
+        swapStatus.textContent = ready ? "REWRITE READY" : "USED · 다음 블록까지";
+      }
+
+      function mergePiece() {
+        const { cells, x, y, z, type } = state.current;
+        for (let i = 0; i < cells.length; i += 1) {
+          if (y + cells[i].y < 0) {
+            endGame();
+            return false;
+          }
+        }
+        cells.forEach((c) => {
+          state.board[z + c.z][y + c.y][x + c.x] = type;
+        });
+        return true;
+      }
+
+      function fullRows() {
+        const rows = [];
+        for (let z = 0; z < DEPTH; z += 1) {
+          for (let y = 0; y < ROWS; y += 1) {
+            if (state.board[z][y].every(Boolean)) rows.push({ z, y });
+          }
+        }
+        return rows;
+      }
+
+      function sliceYs(rows) {
+        const counts = Array(ROWS).fill(0);
+        rows.forEach(({ y }) => { counts[y] += 1; });
+        const ys = [];
+        for (let y = 0; y < ROWS; y += 1) {
+          if (counts[y] === DEPTH) ys.push(y);
+        }
+        return ys;
+      }
+
+      function removeRows(rows) {
+        if (rows.length === 0) return;
+        const byZ = Array.from({ length: DEPTH }, () => []);
+        rows.forEach(({ z, y }) => byZ[z].push(y));
+        byZ.forEach((ys, z) => {
+          if (ys.length === 0) return;
+          state.board[z] = state.board[z].filter((_, y) => !ys.includes(y));
+          while (state.board[z].length < ROWS) {
+            state.board[z].unshift(Array(COLS).fill(null));
+          }
+        });
+
+        const cleared = rows.length;
+        const slices = sliceYs(rows);
+        state.lines += cleared;
+        state.combo += 1;
+
+        const capped = Math.min(cleared, 4);
+        let gained = (LINE_SCORES[capped] + Math.max(0, cleared - 4) * 800) * state.level;
+        gained += slices.length * SLICE_BONUS * state.level;
+        gained += Math.max(0, state.combo - 1) * 50 * state.level;
+        if (state.rewritten) gained *= 2;
+        if (slices.length > 0) {
+          const count = slices.length > 1 ? ` x${slices.length}` : "";
+          showToast(state.rewritten ? `CUR SLICE${count}` : `SLICE${count}`);
+        } else if (state.rewritten) {
+          showToast("CUR CLEAR x2");
+        } else if (state.combo > 1) {
+          showToast(`COMBO x${state.combo}`);
+        }
+
+        state.score += gained;
+        state.level = Math.floor(state.lines / 10) + 1;
+        state.dropMs = Math.max(120, 800 - (state.level - 1) * 70);
+        updateHud();
+        emitAttack(attackPower(cleared, slices.length));
+      }
+
+      function spawnNext() {
+        applyPendingGarbage();
+        if (state.gameOver) {
+          updateHud();
+          return;
+        }
+        ensureQueue();
+        const type = state.nextQueue.shift();
+        ensureQueue();
+        state.current = spawnPiece(type);
+        state.rewritten = false;
+        state.rewriteUntil = 0;
+        setSwapReady(true);
+        syncNext();
+        if (collides(state.current.cells, state.current.x, state.current.y, state.current.z)) {
+          endGame();
+        }
+      }
+
+      function lockCurrent() {
+        if (!mergePiece() || state.gameOver) return;
+        playLock();
+        const rows = fullRows();
+        if (rows.length === 0) state.combo = 0;
+        updateHud();
+        if (rows.length > 0) {
+          const slices = sliceYs(rows);
+          const born = performance.now();
+          playClear(slices.length);
+          state.camKick = Math.max(state.camKick, slices.length ? 1.15 : 0.55);
+          state.clearing = {
+            rows,
+            slices,
+            born,
+            until: born + (slices.length ? 480 : 300)
+          };
+        } else {
+          spawnNext();
+        }
+      }
+
+      function tryMove(dx, dy, dz = 0) {
+        const piece = state.current;
+        if (!piece || state.gameOver || state.paused || state.clearing) return false;
+        const nextZ = piece.z + dz;
+        if (collides(piece.cells, piece.x + dx, piece.y + dy, nextZ)) return false;
+        piece.x += dx;
+        piece.y += dy;
+        piece.z = nextZ;
+        updateHud();
+        return true;
+      }
+
+      // axis: "x" | "y" | "z", dir: 1 | -1
+      // 회전 후 x 킥(0, ±1, ±2), 위쪽 킥(늘어난 높이만큼)을 시도하고,
+      // 깊이가 바뀌는 x축/y축 회전일 때만 z 킥(±1)도 허용한다. z축 회전은 층을 바꾸지 않는다.
+      function tryRotate(axis = "z", dir = 1) {
+        const piece = state.current;
+        if (!piece || state.gameOver || state.paused || state.clearing) return false;
+        const next = rotatedPiece(piece, axis, dir);
+        const xKicks = [0, -1, 1, -2, 2];
+        const zKicks = axis === "z" ? [0] : [0, -1, 1];
+        for (let lift = 0; lift <= next.liftLimit; lift += 1) {
+          for (const dz of zKicks) {
+            for (const dx of xKicks) {
+              if (!collides(next.cells, next.x + dx, next.y - lift, next.z + dz)) {
+                piece.cells = next.cells;
+                piece.x = next.x + dx;
+                piece.y = next.y - lift;
+                piece.z = next.z + dz;
+                updateHud();
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      function softDrop() {
+        if (tryMove(0, 1)) {
+          state.score += 1;
+          updateHud();
+          return true;
+        }
+        lockCurrent();
+        return false;
+      }
+
+      function hardDrop() {
+        const piece = state.current;
+        if (!piece || state.gameOver || state.paused || state.clearing) return;
+        const dist = ghostY(piece) - piece.y;
+        piece.y += dist;
+        state.score += dist * 2;
+        state.camKick = 0.9;
+        updateHud();
+        lockCurrent();
+      }
+
+      function gravityDrop() {
+        if (!tryMove(0, 1)) lockCurrent();
+      }
+
+      function swapWithNext() {
+        const piece = state.current;
+        if (!piece || !state.canSwap || state.gameOver || state.paused || state.clearing) return;
+
+        ensureQueue();
+        const nextType = state.nextQueue[0];
+        const nextCells = cloneShape(nextType);
+        const cur = bounds(piece.cells);
+        const nxt = bounds(nextCells);
+        const x = piece.x + Math.floor((cur.w - nxt.w) / 2);
+        const y = piece.y;
+        const z = piece.z + Math.floor((cur.d - nxt.d) / 2);
+        const kicks = [0, -1, 1, -2, 2];
+        let placed = null;
+
+        for (const dz of [0, -1, 1]) {
+          for (const dy of [0, -1, 1]) {
+            for (const kick of kicks) {
+              if (!collides(nextCells, x + kick, y + dy, z + dz)) {
+                placed = { x: x + kick, y: y + dy, z: z + dz };
+                break;
+              }
+            }
+            if (placed) break;
+          }
+          if (placed) break;
+        }
+
+        if (!placed) {
+          const spawned = spawnPiece(nextType);
+          if (collides(spawned.cells, spawned.x, spawned.y, spawned.z)) return;
+          placed = { x: spawned.x, y: spawned.y, z: spawned.z };
+        }
+
+        const previousType = piece.type;
+        state.current = {
+          type: nextType,
+          cells: nextCells,
+          x: placed.x,
+          y: placed.y,
+          z: placed.z
+        };
+        state.nextQueue[0] = previousType;
+        state.rewritten = true;
+        state.rewriteUntil = performance.now() + REWRITE_MS;
+        state.dropAcc = 0;
+        setSwapReady(false);
+        showToast("REWRITE");
+        playRewrite();
+        syncNext();
+      }
+
+      function updateHud() {
+        const scoreKey = state.seat === 0 ? HIGH_SCORE_KEY : `${HIGH_SCORE_KEY}-p2`;
+        if (state.score > state.highScore) {
+          state.highScore = state.score;
+          localStorage.setItem(scoreKey, String(state.highScore));
+        }
+        scoreEl.textContent = state.score.toLocaleString();
+        highScoreEl.textContent = state.highScore.toLocaleString();
+        linesEl.textContent = String(state.lines);
+        levelEl.textContent = String(state.level);
+        comboEl.textContent = String(state.combo);
+        garbageEl.textContent = String(state.pendingGarbage);
+        garbageEl.classList.toggle("warn", state.pendingGarbage > 0);
+        if (state.current) {
+          const b = bounds(state.current.cells);
+          const from = state.current.z + b.minZ + 1;
+          const to = state.current.z + b.maxZ + 1;
+          depthHud.textContent = `${from === to ? from : `${from}–${to}`} / ${DEPTH}`;
+        } else {
+          depthHud.textContent = `${Math.floor((DEPTH - 1) / 2) + 1} / ${DEPTH}`;
+        }
+      }
+
+      function endGame() {
+        if (state.gameOver) return;
+        state.gameOver = true;
+        state.paused = false;
+        state.collapseAt = performance.now();
+        state.camKick = 1.8;
+        state.floater = null;
+        toastEl.style.opacity = "0";
+        playGameOver();
+        restartBtn.textContent = "다시 시작 (Restart)";
+        stageEl.classList.add("game-over");
+        overlay.classList.add("visible", "game-over");
+        overlay.classList.remove("victory");
+        if (versus) {
+          overlayTitle.textContent = "패배";
+          overlayMessage.textContent = `${state.name} · ${state.score.toLocaleString()}`;
+          const foe = opponent();
+          if (!foe.state.gameOver && !foe.state.victor) {
+            const mine = currentPlayer;
+            bind(foe);
+            foe.state.paused = true;
+            foe.state.victor = true;
+            foe.state.softDrop = false;
+            overlay.classList.add("visible", "victory");
+            overlay.classList.remove("game-over");
+            stageEl.classList.remove("game-over");
+            overlayTitle.textContent = "승리";
+            overlayMessage.textContent = `${foe.state.name} · ${foe.state.score.toLocaleString()}`;
+            restartBtn.textContent = "다시 시작 (Restart)";
+            tone(523, 0.16, "triangle", 0.06, 784);
+            tone(784, 0.22, "sine", 0.05, 1046);
+            bind(mine);
+          }
+          return;
+        }
+        overlayTitle.textContent = "Game Over";
+        overlayMessage.textContent = `최종 점수 ${state.score.toLocaleString()}`;
+      }
+
+      function showPaused(show) {
+        if (state.gameOver || state.victor) return;
+        overlayTitle.textContent = "PAUSED";
+        overlayMessage.textContent = "P 키 또는 버튼을 눌러 계속하세요";
+        overlay.classList.toggle("visible", show);
+        restartBtn.textContent = show ? "계속하기" : "다시 시작 (Restart)";
+      }
+
+      function resetGame() {
+        state.board = createBoard();
+        state.bag = shuffleBag();
+        state.nextQueue = [];
+        ensureQueue();
+        state.score = 0;
+        state.lines = 0;
+        state.level = 1;
+        state.combo = 0;
+        state.dropMs = 800;
+        state.dropAcc = 0;
+        state.lastTs = 0;
+        state.softDrop = false;
+        state.paused = false;
+        state.gameOver = false;
+        state.clearing = null;
+        state.rewritten = false;
+        state.rewriteUntil = 0;
+        state.floater = null;
+        state.camKick = 0;
+        state.collapseAt = 0;
+        state.pendingGarbage = 0;
+        state.victor = false;
+        stageEl.classList.remove("game-over");
+        overlay.classList.remove("visible", "game-over", "victory");
+        restartBtn.textContent = "다시 시작 (Restart)";
+        spawnNext();
+        updateHud();
+      }
+
+      // 각 셀을 실제 (x, y, z) 격자 좌표로 배치한다. 렌더 좌표 변환은 cellPos 한 곳에서만 일어난다.
+      function placeShape(cubes, cells, originX, originY, originZ, color, glow, alpha) {
+        let used = 0;
+        cubes.forEach((mesh) => { mesh.visible = false; });
+        if (!cells) return;
+        cells.forEach((c) => {
+          if (originY + c.y < 0) return;
+          const mesh = cubes[used];
+          mesh.position.copy(cellPos(originX + c.x, originY + c.y, originZ + c.z));
+          paintCube(mesh, color, glow, alpha);
+          used += 1;
+        });
+      }
+
+      function scatterPiece(age) {
+        const piece = state.current;
+        if (!piece) return;
+        piece.cells.forEach((c, i) => {
+          const mesh = active[i];
+          const used = i + 1;
+          const dir = used % 2 ? 1 : -1;
+          const t = Math.max(0, age * 1.15);
+          mesh.position.copy(cellPos(piece.x + c.x, piece.y + c.y, piece.z + c.z));
+          mesh.position.x += dir * t * 2.2;
+          mesh.position.y += 1.4 * t - t * t * 6;
+          mesh.position.z += (used - 2) * t * 0.85;
+          mesh.rotation.z = dir * t * 4;
+          mesh.rotation.y = t * 2.2;
+          paintCube(mesh, COLORS[piece.type], true, Math.max(0, 1 - t * 0.7));
+          mesh.scale.setScalar(Math.max(0.2, 1 - t * 0.35));
+        });
+      }
+
+      function syncBoard() {
+        const collapsing = state.gameOver && state.collapseAt > 0;
+        const age = collapsing ? (performance.now() - state.collapseAt) / 1000 : 0;
+        let i = 0;
+        for (let z = 0; z < DEPTH; z += 1) {
+          for (let y = 0; y < ROWS; y += 1) {
+            for (let x = 0; x < COLS; x += 1) {
+              const mesh = locked[i];
+              i += 1;
+              const type = state.board[z][y][x];
+              mesh.rotation.set(0, 0, 0);
+              if (!type) {
+                mesh.visible = false;
+                mesh.scale.setScalar(1);
+                continue;
+              }
+              mesh.position.copy(cellPos(x, y, z));
+              if (collapsing) {
+                const delay = y * 0.028 + ((x * 3 + z) % 5) * 0.012;
+                const t = Math.max(0, age - delay);
+                const dir = ((x + z) & 1) ? 1 : -1;
+                mesh.position.x += dir * Math.min(t, 1.2) * 0.4;
+                mesh.position.y -= t * t * 14;
+                mesh.rotation.z = dir * t * 1.5;
+                mesh.rotation.x = t * 0.5;
+                collapseBase.set(COLORS[type]).lerp(collapseTint, Math.min(1, t * 1.15));
+                paintCube(mesh, collapseBase, t < 0.22, Math.max(0.05, 1 - t * 0.55));
+                mesh.scale.setScalar(Math.max(0.12, 1 - t * 0.42));
+              } else if (state.clearing) {
+                const span = Math.max(1, state.clearing.until - state.clearing.born);
+                const t = Math.min(1, (performance.now() - state.clearing.born) / span);
+                const bursting = state.clearing.rows.some((row) => row.z === z && row.y === y);
+                if (bursting) {
+                  const slice = state.clearing.slices.includes(y);
+                  const dir = ((x + z) & 1) ? 1 : -1;
+                  const kick = slice ? 1.35 : 1;
+                  mesh.position.y += t * 0.45 * kick;
+                  mesh.position.x += dir * t * 0.7 * kick;
+                  mesh.position.z += (z - 1) * t * 0.55 * kick;
+                  mesh.rotation.z = dir * t * 1.4;
+                  collapseBase.set(COLORS[type]).lerp(slice ? sliceTint : clearTint, Math.min(1, t * 1.4));
+                  paintCube(mesh, collapseBase, true, Math.max(0, 1 - t * t));
+                  mesh.scale.setScalar(1 + t * (slice ? 0.55 : 0.28));
+                } else {
+                  let drop = 0;
+                  state.clearing.rows.forEach((row) => {
+                    if (row.z === z && row.y > y) drop += 1;
+                  });
+                  const ease = t * t * (3 - 2 * t);
+                  mesh.position.y -= drop * ease;
+                  paintCube(mesh, COLORS[type], false, 1);
+                  mesh.scale.setScalar(1);
+                }
+              } else {
+                paintCube(mesh, COLORS[type], false, 1);
+                mesh.scale.setScalar(1);
+              }
+            }
+          }
+        }
+
+        active.forEach((cube) => {
+          cube.visible = false;
+          cube.rotation.set(0, 0, 0);
+          cube.scale.setScalar(1);
+        });
+        ghosts.forEach((cube) => { cube.visible = false; });
+        if (collapsing) {
+          scatterPiece(age);
+          return;
+        }
+
+        const piece = state.current;
+        if (!piece) return;
+
+        const gy = ghostY(piece);
+        placeShape(ghosts, piece.cells, piece.x, gy, piece.z, COLORS[piece.type], false, 0.22);
+        placeShape(active, piece.cells, piece.x, piece.y, piece.z, COLORS[piece.type], state.rewritten, 1);
+      }
+
+      function syncNext() {
+        for (let i = 0; i < PREVIEW_COUNT; i += 1) {
+          const cubes = previewCubes[i];
+          cubes.forEach((cube) => { cube.visible = false; });
+          const type = state.nextQueue[i];
+          if (!type) continue;
+          const cells = SHAPES[type];
+          const color = COLORS[type];
+          const primary = i === 0;
+          const b = bounds(cells);
+          const cx = (b.minX + b.maxX) / 2;
+          const cy = (b.minY + b.maxY) / 2;
+          const cz = (b.minZ + b.maxZ) / 2;
+          cells.forEach((c, n) => {
+            const mesh = cubes[n];
+            mesh.position.set(c.x - cx, -(c.y - cy), c.z - cz);
+            const glow = primary && state.canSwap;
+            const alpha = primary ? (state.canSwap ? 1 : 0.55) : 1;
+            paintCube(mesh, color, glow, alpha);
+          });
+        }
+      }
+
+      function updateCamera() {
+        let dist = 36 - state.camKick * 2.2;
+        let shakeX = 0;
+        let shakeY = 0;
+        if (state.gameOver && state.collapseAt) {
+          const age = (performance.now() - state.collapseAt) / 1000;
+          const amp = Math.max(0, 0.62 - age);
+          shakeX = Math.sin(age * 64) * amp * 0.85;
+          shakeY = Math.cos(age * 47) * amp * 0.5;
+          dist += Math.min(age, 0.85) * 4;
+        }
+        const yaw = state.yaw;
+        const pitch = state.pitch;
+        camera.position.set(
+          Math.sin(yaw) * Math.cos(pitch) * dist + shakeX,
+          Math.sin(pitch) * dist + 1.2 + shakeY,
+          Math.cos(yaw) * Math.cos(pitch) * dist
+        );
+        camera.lookAt(shakeX * 0.4, -0.6, 0);
+      }
+
+      function syncToast(ts) {
+        if (!state.floater) {
+          toastEl.style.opacity = "0";
+          return;
+        }
+        const t = (ts - state.floater.born) / state.floater.life;
+        if (t >= 1) {
+          state.floater = null;
+          toastEl.style.opacity = "0";
+          return;
+        }
+        toastEl.style.opacity = String(1 - t);
+        toastEl.style.transform = `translate(-50%, calc(-50% - ${t * 36}px))`;
+      }
+
+      function tick(ts) {
+        const live = versus ? players : [players[0]];
+        for (let i = 0; i < live.length; i += 1) {
+          bind(live[i]);
+          simulate(ts);
+        }
+        requestAnimationFrame(tick);
+      }
+
+      function simulate(ts) {
+        if (!state.lastTs) state.lastTs = ts;
+        const delta = Math.min(48, ts - state.lastTs);
+        state.lastTs = ts;
+
+        if (state.clearing && ts >= state.clearing.until) {
+          removeRows(state.clearing.rows);
+          state.clearing = null;
+          if (!state.gameOver) spawnNext();
+        }
+
+        const rewriting = ts < state.rewriteUntil;
+        if (!state.paused && !state.gameOver && !state.clearing && !rewriting) {
+          state.dropAcc += delta;
+          const interval = state.softDrop ? 42 : state.dropMs;
+          while (state.dropAcc >= interval) {
+            state.dropAcc -= interval;
+            const pieceBefore = state.current;
+            if (state.softDrop) softDrop();
+            else gravityDrop();
+            if (state.clearing || state.gameOver || state.current !== pieceBefore) {
+              state.dropAcc = 0;
+              break;
+            }
+          }
+        }
+
+        state.camKick *= 0.86;
+        previewGroups[0].rotation.y = ts * 0.0016;
+        if (state.gameOver && state.collapseAt) {
+          const age = (ts - state.collapseAt) / 1000;
+          const burst = Math.max(0, 1 - age * 1.25);
+          wellLight.color.set(burst > 0.15 ? 0xff5a32 : 0xf0b429);
+          wellLight.intensity = 1.3 + burst * 5;
+          scene.background.set(burst > 0.72 ? 0x3a120c : 0x0b0806);
+          scene.fog.color.set(burst > 0.08 ? 0x2a0c08 : 0x0b0806);
+        } else if (state.clearing) {
+          const slice = state.clearing.slices.length > 0;
+          const span = Math.max(1, state.clearing.until - state.clearing.born);
+          const t = Math.min(1, (ts - state.clearing.born) / span);
+          wellLight.color.set(slice ? 0xfff6d0 : 0xf0b429);
+          wellLight.intensity = (slice ? 3.4 : 2.3) * (1 - t * 0.45);
+          scene.background.set(0x0b0806);
+          scene.fog.color.set(0x0b0806);
+        } else {
+          wellLight.color.set(0xf0b429);
+          wellLight.intensity = state.rewritten ? 2.1 : 1.3;
+          scene.background.set(0x0b0806);
+          scene.fog.color.set(0x0b0806);
+        }
+        updateCamera();
+        syncBoard();
+        syncToast(ts);
+        renderer.render(scene, camera);
+        nextRenderer.render(nextScene, nextCamera);
+        currentPlayer.renderViews(scene);
+      }
+
+      const ACTIONS = {
+        ArrowLeft: "left",
+        ArrowRight: "right",
+        ArrowDown: "soft",
+        ArrowUp: "rot",
+        w: "forward",
+        W: "forward",
+        s: "back",
+        S: "back",
+        z: "rotccw",
+        Z: "rotccw",
+        a: "spinL",
+        A: "spinL",
+        d: "spinR",
+        D: "spinR",
+        f: "tiltB",
+        F: "tiltB",
+        g: "tiltF",
+        G: "tiltF",
+        " ": "hard",
+        c: "swap",
+        C: "swap",
+        Shift: "swap"
+      };
+
+      let focusedSeat = 0;
+      let bridgeLive = false;
+      const keyboardSeat = new Map();
+      const bridgeHeld = new Map();
+
+      const VK_TO_KEY = {
+        37: "ArrowLeft",
+        39: "ArrowRight",
+        40: "ArrowDown",
+        38: "ArrowUp",
+        32: " ",
+        16: "Shift",
+        13: "Enter",
+        87: "w",
+        83: "s",
+        90: "z",
+        65: "a",
+        68: "d",
+        70: "f",
+        71: "g",
+        67: "c",
+        81: "q",
+        69: "e",
+        80: "p",
+        82: "r"
+      };
+
+      function eventKeyboardId(event) {
+        const candidates = [
+          event.deviceId,
+          event.source,
+          event.srcDevice,
+          event.inputDevice,
+          event.keyboardId,
+          event.sourceCapabilities && event.sourceCapabilities.deviceId
+        ];
+        for (let i = 0; i < candidates.length; i += 1) {
+          const value = candidates[i];
+          if (value != null && value !== "" && value !== event) return String(value);
+        }
+        return null;
+      }
+
+      function updatePads() {
+        players.forEach((player) => {
+          const el = player.root.querySelector(".pad-status");
+          if (!el) return;
+          const seat = player.state.seat;
+          const bound = [...keyboardSeat.entries()].some((entry) => entry[1] === seat);
+          player.root.classList.toggle("input-on", versus && bound);
+          if (!versus) return;
+          if (bound) {
+            el.classList.add("on");
+            el.textContent = seat === 0 ? "P1 키보드 연결됨" : "P2 키보드 연결됨";
+            return;
+          }
+          el.classList.remove("on");
+          if (!bridgeLive) {
+            el.textContent = "play.bat으로 실행 · 키보드 2개를 구분합니다";
+            return;
+          }
+          el.textContent = seat === 0
+            ? "이 키보드에서 아무 키 → P1"
+            : "다른 키보드에서 아무 키 → P2";
+        });
+      }
+
+      function bindDevice(id) {
+        if (!id) return -1;
+        if (keyboardSeat.has(id)) return keyboardSeat.get(id);
+        const taken = new Set(keyboardSeat.values());
+        const seat = !taken.has(0) ? 0 : (!taken.has(1) && versus ? 1 : -1);
+        if (seat < 0) return -1;
+        keyboardSeat.set(id, seat);
+        updatePads();
+        return seat;
+      }
+
+      function claimSeat(seat) {
+        if (bridgeLive) return;
+        focusedSeat = seat;
+        players.forEach((player) => {
+          player.root.classList.toggle("input-on", versus && player.state.seat === seat);
+        });
+      }
+
+      function seatForEvent(event) {
+        if (!versus) return 0;
+        const id = eventKeyboardId(event);
+        if (id) return bindDevice(id);
+        return focusedSeat;
+      }
+
+      function resetMatch() {
+        const live = versus ? players : [players[0]];
+        live.forEach((player) => {
+          bind(player);
+          resetGame();
+        });
+      }
+
+      function togglePause() {
+        if (matchOver()) return;
+        const next = !players[0].state.paused;
+        const live = versus ? players : [players[0]];
+        live.forEach((player) => {
+          bind(player);
+          player.state.paused = next;
+          showPaused(next);
+          if (!next) player.state.lastTs = 0;
+        });
+      }
+
+      function resizeSeat(player) {
+        const rect = player.viewCanvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        player.camera.aspect = rect.width / rect.height;
+        player.camera.updateProjectionMatrix();
+        player.renderer.setSize(rect.width, rect.height, false);
+        player.layoutViews();
+      }
+
+      function setVersus(on) {
+        if (on === versus && players[0].state.board.length) return;
+        versus = on;
+        const arena = document.getElementById("arena");
+        arena.classList.toggle("versus", on);
+        arena.classList.toggle("solo", !on);
+        document.getElementById("mode-vs").classList.toggle("on", on);
+        document.getElementById("mode-solo").classList.toggle("on", !on);
+        players[0].root.querySelector(".blurb").textContent = on
+          ? "2인 대전 · 3축 회전 폴리큐브 · 줄을 지우면 상대에게 공격"
+          : "10 × 20 × 3 입체 우물 · 3축 회전 폴리큐브 · 3층 SLICE";
+        players[1].root.querySelector(".blurb").textContent = on
+          ? "P1과 같은 키 · 두 번째 키보드"
+          : "";
+        keyboardSeat.clear();
+        bridgeHeld.clear();
+        focusedSeat = 0;
+        updatePads();
+        resetMatch();
+        requestAnimationFrame(() => players.forEach(resizeSeat));
+      }
+
+      function handleAction(seat, action, isDown, repeat) {
+        if (seat < 0 || (!versus && seat === 1)) return;
+        bind(players[seat]);
+        if (!isDown) {
+          if (action === "soft") state.softDrop = false;
+          return;
+        }
+        if (state.paused || state.gameOver || state.victor) return;
+        const ROTATE_ACTIONS = ["rot", "rotccw", "spinL", "spinR", "tiltB", "tiltF"];
+        if (repeat && (action === "swap" || ROTATE_ACTIONS.includes(action))) return;
+        switch (action) {
+          case "left":
+            tryMove(-1, 0, 0);
+            break;
+          case "right":
+            tryMove(1, 0, 0);
+            break;
+          case "forward":
+            tryMove(0, 0, 1);
+            break;
+          case "back":
+            tryMove(0, 0, -1);
+            break;
+          case "soft":
+            state.softDrop = true;
+            state.dropAcc = 0;
+            if (performance.now() >= state.rewriteUntil) softDrop();
+            break;
+          case "rot":
+            tryRotate("z", 1);
+            break;
+          case "rotccw":
+            tryRotate("z", -1);
+            break;
+          case "spinL":
+            tryRotate("y", -1);
+            break;
+          case "spinR":
+            tryRotate("y", 1);
+            break;
+          case "tiltB":
+            tryRotate("x", -1);
+            break;
+          case "tiltF":
+            tryRotate("x", 1);
+            break;
+          case "hard":
+            hardDrop();
+            break;
+          case "swap":
+            swapWithNext();
+            break;
+          default:
+            break;
+        }
+      }
+
+      function onBridgeEvent(msg) {
+        if (!msg || msg.type === "dead") {
+          bridgeLive = false;
+          updatePads();
+          return;
+        }
+        if (msg.type === "hello") {
+          bridgeLive = true;
+          updatePads();
+          return;
+        }
+        if (msg.type !== "key") return;
+        bridgeLive = true;
+        audio();
+        const key = VK_TO_KEY[msg.vk];
+        if (!key) return;
+        const holdKey = `${msg.id}:${msg.vk}`;
+        const wasDown = bridgeHeld.has(holdKey);
+        if (msg.down) bridgeHeld.set(holdKey, true);
+        else bridgeHeld.delete(holdKey);
+        const repeat = msg.down && wasDown;
+        const seat = bindDevice(String(msg.id));
+
+        if (key === "r") {
+          if (msg.down && !repeat) resetMatch();
+          return;
+        }
+        if (key === "q" || key === "e") {
+          if (!msg.down || repeat) return;
+          const dir = key === "q" ? -1 : 1;
+          players.forEach((player) => {
+            if (!versus && player.state.seat === 1) return;
+            player.state.yaw = Math.max(-1.2, Math.min(1.2, player.state.yaw + dir * 0.08));
+          });
+          return;
+        }
+        if (matchOver()) {
+          if (key === "Enter" && msg.down && !repeat) resetMatch();
+          return;
+        }
+        if ((key === "p") && msg.down && !repeat) {
+          togglePause();
+          return;
+        }
+        const action = ACTIONS[key];
+        if (!action) return;
+        handleAction(seat, action, msg.down, repeat);
+      }
+
+      function connectBridge() {
+        const url = location.port === "8787" ? "/keys" : "http://127.0.0.1:8787/keys";
+        const es = new EventSource(url);
+        es.onmessage = (event) => {
+          try { onBridgeEvent(JSON.parse(event.data)); } catch { /* ignore */ }
+        };
+        es.onerror = () => {
+          if (bridgeLive) {
+            bridgeLive = false;
+            updatePads();
+          }
+        };
+      }
+
+      function onKeyDown(event) {
+        const key = event.key;
+        audio();
+        const action = ACTIONS[key];
+        if (bridgeLive) {
+          if (action || ["r", "R", "p", "P", "q", "Q", "e", "E", "Enter"].includes(key)) {
+            event.preventDefault();
+          }
+          return;
+        }
+        const seat = action ? seatForEvent(event) : -1;
+        if (action || key === " " || key.startsWith("Arrow")) event.preventDefault();
+
+        if (key === "r" || key === "R") {
+          event.preventDefault();
+          if (!event.repeat) resetMatch();
+          return;
+        }
+
+        if (key === "q" || key === "Q" || key === "e" || key === "E") {
+          const dir = key === "q" || key === "Q" ? -1 : 1;
+          players.forEach((player) => {
+            if (!versus && player.state.seat === 1) return;
+            player.state.yaw = Math.max(-1.2, Math.min(1.2, player.state.yaw + dir * 0.08));
+          });
+          return;
+        }
+
+        if (matchOver()) {
+          if (key === "Enter") resetMatch();
+          return;
+        }
+
+        if (key === "p" || key === "P") {
+          togglePause();
+          return;
+        }
+
+        handleAction(seat, action, true, event.repeat);
+      }
+
+      function onKeyUp(event) {
+        if (bridgeLive) return;
+        const action = ACTIONS[event.key];
+        if (action !== "soft") return;
+        handleAction(seatForEvent(event), action, false, false);
+      }
+
+      players.forEach((player) => {
+        let dragging = false;
+        let lastX = 0;
+        let lastY = 0;
+        const canvas = player.viewCanvas;
+        player.root.addEventListener("pointerdown", () => claimSeat(player.state.seat));
+        canvas.addEventListener("pointerdown", (event) => {
+          claimSeat(player.state.seat);
+          dragging = true;
+          lastX = event.clientX;
+          lastY = event.clientY;
+          canvas.setPointerCapture(event.pointerId);
+        });
+        canvas.addEventListener("pointermove", (event) => {
+          if (!dragging) return;
+          const seatState = player.state;
+          seatState.yaw = Math.max(-1.2, Math.min(1.2, seatState.yaw + (event.clientX - lastX) * 0.006));
+          seatState.pitch = Math.max(0.06, Math.min(0.72, seatState.pitch + (event.clientY - lastY) * 0.004));
+          lastX = event.clientX;
+          lastY = event.clientY;
+        });
+        canvas.addEventListener("pointerup", () => { dragging = false; });
+        canvas.addEventListener("pointerleave", () => { dragging = false; });
+        player.restartBtn.addEventListener("click", () => {
+          if (player.state.paused && !player.state.gameOver && !player.state.victor && !matchOver()) {
+            togglePause();
+            return;
+          }
+          resetMatch();
+        });
+      });
+
+      window.addEventListener("resize", () => players.forEach(resizeSeat));
+      document.getElementById("mode-solo").addEventListener("click", () => setVersus(false));
+      document.getElementById("mode-vs").addEventListener("click", () => setVersus(true));
+      document.addEventListener("keydown", onKeyDown);
+      document.addEventListener("keyup", onKeyUp);
+      document.addEventListener("visibilitychange", () => {
+        players.forEach((player) => {
+          player.state.lastTs = 0;
+          if (document.hidden) player.state.softDrop = false;
+        });
+      });
+
+      setVersus(true);
+      connectBridge();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>
